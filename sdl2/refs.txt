@@ -1,0 +1,18 @@
+cross-platform + SDL
+https://github.com/floooh/pacman.zig
+
+OSX + SDL build.zig
+https://dev.to/zealouswombat/comment/1ce33
+
+SDL wrapper 
+https://github.com/MasterQ32/SDL.zig
+
+SDL + zig article
+https://pixeli.dev/zig/sdl2/2021/05/31/how-i-use-sdl2-in-zig.html
+
+SDL tutorials
+https://wiki.libsdl.org/SDL2/Tutorials
+
+example code for sdl/spiralling-squares demo
+https://dev.to/fabioarnold/setup-zig-for-gamedev-2bmf
+
