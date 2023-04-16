@@ -4,8 +4,6 @@
 
 - integrate/convert some of this: https://github.com/ferzkopp/SDL_gfx
 - implement transparency on textures
-- implement a polymorphic sprite group container
-- sprite polymorphism
 - game (basic functionality)
   - remaining game states
   - sounds
@@ -37,3 +35,5 @@
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)
   - links to libs/references other projects
+- implement a polymorphic sprite group container (hacky version)
+- sprite polymorphism (hacky version)
