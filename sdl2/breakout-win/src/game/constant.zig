@@ -1,0 +1,10 @@
+pub const SCREEN_WIDTH = 600;
+pub const SCREEN_HEIGHT = 800;
+
+pub const BRICKS_PER_ROW = 12;
+pub const BRICKS_PER_COLUMN = 40;
+pub const NUM_BRICK_ROWS = 6;
+pub const BRICK_WIDTH = SCREEN_WIDTH / BRICKS_PER_ROW;
+pub const BRICK_HEIGHT = SCREEN_HEIGHT / BRICKS_PER_COLUMN;
+
+pub const BALL_RADIUS = 6;

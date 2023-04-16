@@ -19,3 +19,5 @@ zig-out/
 
 # MacOS
 .DS_Store
+
+3rdparty/
