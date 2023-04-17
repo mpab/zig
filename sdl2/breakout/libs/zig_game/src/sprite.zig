@@ -6,6 +6,7 @@ pub const ExtendedAttributes = struct {
     vx: i32,
     vy: i32,
     state: i32,
+    string: [:0]const u8,
 };
 
 pub const Sprite = struct {

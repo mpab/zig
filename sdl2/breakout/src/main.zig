@@ -159,6 +159,9 @@ fn run_game(gctx: *GameContext) !void {
         moving_brick.ext.vy = 1;
         try gctx.animations.add(moving_brick);
 
+        var moving_text = try game.sprite.DisappearingMovingSprite.text(gctx.zg_ctx, "+10", moving_brick.bounds, moving_brick.x, moving_brick.y, 0, -1);
+        try gctx.animations.add(moving_text);
+
         gctx.ball.?.ext.vy = -gctx.ball.?.ext.vy;
         gctx.score += 10;
     }

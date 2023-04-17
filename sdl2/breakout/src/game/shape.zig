@@ -4,7 +4,13 @@ const color = @import("color.zig");
 
 pub const TextureRect = struct { texture: sdl.Texture, rect: sdl.Rectangle };
 
-pub fn colored_texture(ctx: zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !TextureRect {
+pub fn create_canvas(ctx: zg.gfx.Context, width: i32, height: i32) !zg.gfx.Canvas {
+    var texture = try sdl.createTexture(ctx.renderer, ctx.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
+    var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
+    return zg.gfx.Canvas.init(texture, rect.width, rect.height);
+}
+
+fn colored_texture(ctx: zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !TextureRect {
     var texture = try sdl.createTexture(ctx.renderer, ctx.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
     const r = ctx.renderer;

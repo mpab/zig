@@ -1,4 +1,6 @@
+const std = @import("std");
 const zg = @import("zig-game");
+const shape = @import("shape.zig");
 
 pub fn from_sdl_rect(r: zg.sdl.Rectangle) zg._type.Rect {
     return .{ .left = r.x, .top = r.y, .right = r.x + r.width, .bottom = r.y + r.height };
@@ -8,9 +10,13 @@ pub fn from_sprite(s: *zg.sprite.Sprite) zg._type.Rect {
     return .{ .left = s.x, .top = s.y, .right = s.x + s.canvas.width, .bottom = s.y + s.canvas.height };
 }
 
+fn init_ext(vx: i32, vy: i32) zg.sprite.ExtendedAttributes {
+    return .{ .vx = vx, .vy = vy, .state = 0, .string = "" };
+}
+
 pub const BasicSprite = struct {
     pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32) zg.sprite.Sprite {
-        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = 0, .vy = 0, .state = 0 } };
+        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(0, 0) };
     }
 
     fn v_draw(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
@@ -26,7 +32,7 @@ pub const BasicSprite = struct {
 
 pub const BouncingSprite = struct {
     pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32) zg.sprite.Sprite {
-        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = vx, .vy = vy, .state = 0 } };
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(vx, vy) };
     }
 
     fn v_update(self: *zg.sprite.Sprite) void {
@@ -59,8 +65,9 @@ pub const BouncingSprite = struct {
 };
 
 pub const DisappearingMovingSprite = struct {
-    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32) zg.sprite.Sprite {
-        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = vx, .vy = vy, .state = 0 } };
+    pub fn text(ctx: zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32) !zg.sprite.Sprite {
+        var canvas = try shape.create_canvas(ctx, 1, 1);
+        return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = vx, .vy = vy, .state = 0, .string = std.mem.span(c_string) } };
     }
 
     pub fn clone(base: zg.sprite.Sprite) zg.sprite.Sprite {
@@ -70,6 +77,11 @@ pub const DisappearingMovingSprite = struct {
     fn v_draw(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
         if (self.ext.state < 0) return; // termination state < 0
         BasicSprite.v_draw(self, ctx);
+    }
+
+    fn v_draw_string(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
+        if (self.ext.state < 0) return; // termination state < 0
+        zg.text.draw_text(@constCast(&ctx), self.ext.string, self.x, self.y, 2) catch return;
     }
 
     fn v_update(self: *zg.sprite.Sprite) void {

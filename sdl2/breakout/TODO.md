@@ -38,3 +38,4 @@
 - implement a polymorphic sprite group container (hacky version)
 - sprite polymorphism (hacky version)
 - disappearing animation sprite
+- text sprites (not using textures)

@@ -16,7 +16,7 @@ pub const Canvas = struct {
     texture: sdl.Texture,
 
     pub fn init(tex: sdl.Texture, width: i32, height: i32) Canvas {
-        return Canvas{ .texture = tex, .width = width, .height = height };
+        return .{ .texture = tex, .width = width, .height = height };
     }
 };
 
