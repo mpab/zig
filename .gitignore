@@ -20,4 +20,7 @@ zig-out/
 # MacOS
 .DS_Store
 
+# local 3rd-party libs
 3rdparty/
+
+scrap/
