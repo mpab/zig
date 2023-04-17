@@ -10,13 +10,13 @@ pub fn from_sprite(s: *zg.sprite.Sprite) zg._type.Rect {
     return .{ .left = s.x, .top = s.y, .right = s.x + s.canvas.width, .bottom = s.y + s.canvas.height };
 }
 
-fn init_ext(vx: i32, vy: i32) zg.sprite.ExtendedAttributes {
-    return .{ .vx = vx, .vy = vy, .state = 0, .string = "" };
+fn init_ext(vel: i32, dx: i32, dy: i32) zg.sprite.ExtendedAttributes {
+    return .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = "" };
 }
 
 pub const BasicSprite = struct {
     pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32) zg.sprite.Sprite {
-        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(0, 0) };
+        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(0, 0, 0) };
     }
 
     fn v_draw(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
@@ -31,31 +31,31 @@ pub const BasicSprite = struct {
 };
 
 pub const BouncingSprite = struct {
-    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32) zg.sprite.Sprite {
-        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(vx, vy) };
+    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) zg.sprite.Sprite {
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(vel, dx, dy) };
     }
 
     fn v_update(self: *zg.sprite.Sprite) void {
-        self.x += self.ext.vx;
-        self.y += self.ext.vy;
+        self.x += self.ext.dx * self.ext.vel;
+        self.y += self.ext.dy * self.ext.vel;
 
         var sr = from_sprite(self);
         var bounds = from_sdl_rect(self.bounds);
 
         if (sr.left < bounds.left) {
-            self.ext.vx = -self.ext.vx;
+            self.ext.dx = -self.ext.dx;
             sr.left = bounds.left;
         }
         if (sr.right > bounds.right) {
-            self.ext.vx = -self.ext.vx;
+            self.ext.dx = -self.ext.dx;
             sr.left = bounds.right - self.canvas.width;
         }
         if (sr.top < bounds.top) {
-            self.ext.vy = -self.ext.vy;
+            self.ext.dy = -self.ext.dy;
             sr.top = bounds.top;
         }
         if (sr.bottom > bounds.bottom) {
-            self.ext.vy = -self.ext.vy;
+            self.ext.dy = -self.ext.dy;
             sr.top = bounds.bottom - self.canvas.height;
         }
 
@@ -65,9 +65,9 @@ pub const BouncingSprite = struct {
 };
 
 pub const DisappearingMovingSprite = struct {
-    pub fn text(ctx: zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32) !zg.sprite.Sprite {
+    pub fn text(ctx: zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
         var canvas = try shape.create_canvas(ctx, 1, 1);
-        return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = vx, .vy = vy, .state = 0, .string = std.mem.span(c_string) } };
+        return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
     }
 
     pub fn clone(base: zg.sprite.Sprite) zg.sprite.Sprite {
@@ -88,10 +88,8 @@ pub const DisappearingMovingSprite = struct {
         if (self.ext.state < 0) return; // termination state < 0
 
         if (self.ext.state < 32) {
-            self.x += self.ext.vx;
-            self.ext.vx = self.ext.vx;
-            self.y += self.ext.vy;
-            self.ext.vy = self.ext.vy;
+            self.x += self.ext.dx * self.ext.vel;
+            self.y += self.ext.dy * self.ext.vel;
             self.ext.state += 1;
         } else {
             self.ext.state = -1;

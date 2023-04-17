@@ -3,8 +3,9 @@ const gfx = @import("gfx.zig");
 const sdl = @import("sdl-wrapper"); // configured in build.zig
 
 pub const ExtendedAttributes = struct {
-    vx: i32,
-    vy: i32,
+    vel: i32,
+    dx: i32,
+    dy: i32,
     state: i32,
     string: [:0]const u8,
 };

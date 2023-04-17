@@ -7,11 +7,11 @@
 - game (basic functionality)
   - remaining game states
   - sounds
-  - levels
   - high scores
 - game (improved functionality)
   - gradient font rendering
   - drawing: more primitives (filled circle, rectangle with rounded edges, ...)
+- improve sprite velocity logic using polar coordinates
 - installation and setup
   - fix zig sdl library hack
 
@@ -19,8 +19,10 @@
 
 - basic SDL bootstrapping
 - game (basic functionality)
+  - levels
   - most game states
   - ticker/state ticker
+  - ticker/ball speedup ticker (ball speedup during level)
   - scoring
   - sprite collisions (using intersecting rectangles)
   - sprites
@@ -37,5 +39,6 @@
   - links to libs/references other projects
 - implement a polymorphic sprite group container (hacky version)
 - sprite polymorphism (hacky version)
-- disappearing animation sprite
+- disappearing animation sprite for brick and score
 - text sprites (not using textures)
+- improved sprite velocity logic using .vel dx, dy
