@@ -41,4 +41,4 @@
 - sprite polymorphism (hacky version)
 - disappearing animation sprite for brick and score
 - text sprites (not using textures)
-- improved sprite velocity logic using .vel dx, dy
+- improved sprite velocity logic using {.vel .dx .dy}
