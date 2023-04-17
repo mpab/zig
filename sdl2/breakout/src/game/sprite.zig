@@ -8,99 +8,81 @@ pub fn from_sprite(s: *zg.sprite.Sprite) zg._type.Rect {
     return .{ .left = s.x, .top = s.y, .right = s.x + s.canvas.width, .bottom = s.y + s.canvas.height };
 }
 
-pub const Ball = struct {
+pub const BasicSprite = struct {
+    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32) zg.sprite.Sprite {
+        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = 0, .vy = 0, .state = 0 } };
+    }
+
+    fn v_draw(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
+        var src_rect = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = self.canvas.width, .height = self.canvas.height };
+        var dest_rect = zg.sdl.Rectangle{ .x = self.x, .y = self.y, .width = self.canvas.width, .height = self.canvas.height };
+        ctx.renderer.copy(self.canvas.texture, dest_rect, src_rect) catch return;
+    }
+
+    pub fn v_update(self: *zg.sprite.Sprite) void {
+        _ = self;
+    }
+};
+
+pub const BouncingSprite = struct {
     pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32) zg.sprite.Sprite {
-        return .{ .__v_update = update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = vx, .vy = vy, .state = 0 } };
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = vx, .vy = vy, .state = 0 } };
     }
 
-    pub fn update(base: *zg.sprite.Sprite) void {
-        base.x += base.ext.vx;
-        base.y += base.ext.vy;
+    fn v_update(self: *zg.sprite.Sprite) void {
+        self.x += self.ext.vx;
+        self.y += self.ext.vy;
 
-        var sr = from_sprite(base);
-        var bounds = from_sdl_rect(base.bounds);
+        var sr = from_sprite(self);
+        var bounds = from_sdl_rect(self.bounds);
 
         if (sr.left < bounds.left) {
-            base.ext.vx = -base.ext.vx;
+            self.ext.vx = -self.ext.vx;
             sr.left = bounds.left;
         }
         if (sr.right > bounds.right) {
-            base.ext.vx = -base.ext.vx;
-            sr.left = bounds.right - base.canvas.width;
+            self.ext.vx = -self.ext.vx;
+            sr.left = bounds.right - self.canvas.width;
         }
         if (sr.top < bounds.top) {
-            base.ext.vy = -base.ext.vy;
+            self.ext.vy = -self.ext.vy;
             sr.top = bounds.top;
         }
         if (sr.bottom > bounds.bottom) {
-            base.ext.vy = -base.ext.vy;
-            sr.top = bounds.bottom - base.canvas.height;
+            self.ext.vy = -self.ext.vy;
+            sr.top = bounds.bottom - self.canvas.height;
         }
 
-        base.x = sr.left;
-        base.y = sr.top;
+        self.x = sr.left;
+        self.y = sr.top;
     }
 };
 
-pub const Sprite = struct {
-    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32) zg.sprite.Sprite {
-        return .{ .__v_update = Sprite.update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = 0, .vy = 0, .state = 0 } };
-    }
-    pub fn update(base: *zg.sprite.Sprite) void {
-        _ = base;
-    }
-};
-
-pub const Brick = struct {
-    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32) zg.sprite.Sprite {
-        return .{ .__v_update = update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = 0, .vy = 0, .state = 0 } };
+pub const DisappearingMovingSprite = struct {
+    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32) zg.sprite.Sprite {
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vx = vx, .vy = vy, .state = 0 } };
     }
 
-    pub fn update(base: *zg.sprite.Sprite) void {
-        base.x += base.ext.vx;
-        base.y += base.ext.vy;
+    pub fn clone(base: zg.sprite.Sprite) zg.sprite.Sprite {
+        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = base.canvas, .bounds = base.bounds, .x = base.x, .y = base.y, .ext = base.ext };
+    }
 
-        var sr = from_sprite(base);
-        var bounds = from_sdl_rect(base.bounds);
+    fn v_draw(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
+        if (self.ext.state < 0) return; // termination state < 0
+        BasicSprite.v_draw(self, ctx);
+    }
 
-        if (sr.left < bounds.left) {
-            base.ext.vx = -base.ext.vx;
-            sr.left = bounds.left;
-        }
-        if (sr.right > bounds.right) {
-            base.ext.vx = -base.ext.vx;
-            sr.left = bounds.right - base.canvas.width;
-        }
-        if (sr.top < bounds.top) {
-            base.ext.vy = -base.ext.vy;
-            sr.top = bounds.top;
-        }
-        if (sr.bottom > bounds.bottom) {
-            base.ext.vy = -base.ext.vy;
-            sr.top = bounds.bottom - base.canvas.height;
-        }
+    fn v_update(self: *zg.sprite.Sprite) void {
+        if (self.ext.state < 0) return; // termination state < 0
 
-        base.x = sr.left;
-        base.y = sr.top;
+        if (self.ext.state < 32) {
+            self.x += self.ext.vx;
+            self.ext.vx = self.ext.vx;
+            self.y += self.ext.vy;
+            self.ext.vy = self.ext.vy;
+            self.ext.state += 1;
+        } else {
+            self.ext.state = -1;
+        }
     }
 };
-
-// pub const DisappearingBrick = struct {
-//     //base: zg.sprite.Sprite,
-
-//     pub fn new(target: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vx: i32, vy: i32, countdown: i32) Ball {
-//         return DisappearingBrick{ .base = .{ .target = target, .bounds = bounds, .x = x, .y = y }, .vx = vx, .vy = vy, .countdown = countdown };
-//     }
-
-//     pub fn draw(self: Ball, ctx: zg.Context) void {
-//         if (self.countdown > 0)
-//             self.base.draw(ctx);
-//     }
-
-//     pub fn update(self: *Ball) void {
-//         self.base.x += self.vx;
-//         self.base.y += self.vy;
-
-//         self.countdown = if (self.countdown > 0) self.countdown - 1 else self.countdown;
-//     }
-// };

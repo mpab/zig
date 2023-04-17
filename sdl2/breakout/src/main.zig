@@ -34,6 +34,7 @@ const GameContext = struct {
     ticker: game.time.Ticker,
     bounds: zg.sdl.Rectangle,
     bricks: zg.sprite.Group,
+    animations: zg.sprite.Group,
     ball: ?*zg.sprite.Sprite = null,
     bat: ?*zg.sprite.Sprite = null,
     deadly_border: ?*zg.sprite.Sprite = null,
@@ -42,8 +43,6 @@ const GameContext = struct {
         // NOTE: defer frees resources when going out of scope
         //defer zg.sdl.SDL_DestroyWindow(window);
         var zg_ctx = zg.gfx.Context.init(game.constant.SCREEN_WIDTH, game.constant.SCREEN_HEIGHT) catch |err| return err;
-        var bounds = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = zg_ctx.size.width_pixels, .height = zg_ctx.size.height_pixels };
-        var bricks = zg.sprite.Group.init();
 
         return .{
             .zg_ctx = zg_ctx,
@@ -52,8 +51,9 @@ const GameContext = struct {
             .score = 0,
             .high_score = 0,
             .game_state = GameState.ATTRACT,
-            .bounds = bounds,
-            .bricks = bricks,
+            .bounds = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = zg_ctx.size.width_pixels, .height = zg_ctx.size.height_pixels },
+            .bricks = zg.sprite.Group.init(),
+            .animations = zg.sprite.Group.init(),
             .ticker = game.time.Ticker.init(),
             // .ball = &ball,
             // .bat = &bat,
@@ -67,21 +67,6 @@ fn get_screen_center(gctx: *GameContext) zg._type.Point {
     var y = @divTrunc(gctx.zg_ctx.size.height_pixels, 2);
     return .{ .x = x, .y = y };
 }
-
-// fn run_attract(gctx: GameContext) !void {
-//     const a = 0.01 * @intToFloat(f32, c_zg.sdl.SDL_GetTicks());
-//     const t = 2 * std.math.pi / 3.0;
-//     const r = 100 * @cos(0.1 * a);
-//     for (g_sprite_group.sprites.items, 0..) |s, index| {
-//         var mul = @intToFloat(f64, index);
-//         var x = @divTrunc(gctx.zg_ctx.size.width_pixels, 2);
-//         var y = @divTrunc(gctx.zg_ctx.size.height_pixels, 2);
-//         x = x + @floatToInt(i32, r * @cos(a + t * mul));
-//         y = y + @floatToInt(i32, r * @sin(a + t * mul));
-//         s.move_abs(x, y);
-//         s.render(gctx.zg_ctx);
-//     }
-// }
 
 // event handlers
 fn handle_mouse_button_up(gctx: *GameContext, event: zg.sdl.Event) void {
@@ -102,8 +87,6 @@ fn set_game_state(gctx: *GameContext, state: GameState) void {
     gctx.ticker.reset();
 }
 
-//
-
 fn reset_ball(gctx: *GameContext) void {
     var pos = get_screen_center(gctx);
     gctx.ball.?.x = pos.x;
@@ -118,6 +101,8 @@ fn run_new_game(gctx: *GameContext) !void {
     gctx.level = 1;
     gctx.score = 0;
     set_game_state(gctx, GameState.GET_READY);
+
+    try draw_game_screen(gctx); // prevent flicker
 }
 
 fn run_attract(gctx: *GameContext) !void {
@@ -153,6 +138,7 @@ fn draw_level_lives_score(gctx: *GameContext) !void {
 fn draw_game_screen(gctx: *GameContext) !void {
     gctx.ball.?.draw(gctx.zg_ctx);
     gctx.bricks.draw(gctx.zg_ctx);
+    gctx.animations.draw(gctx.zg_ctx);
     gctx.bat.?.draw(gctx.zg_ctx);
     gctx.bat.?.draw(gctx.zg_ctx);
     gctx.deadly_border.?.draw(gctx.zg_ctx);
@@ -161,13 +147,18 @@ fn draw_game_screen(gctx: *GameContext) !void {
 
 fn run_game(gctx: *GameContext) !void {
     //try update_and_render(gctx, gctx.bricks.?);
-    gctx.bricks.update();
+    gctx.animations.update();
     gctx.ball.?.update();
 
     // handle brick/ball collision
     var result = gctx.bricks.collision_result(gctx.ball.?);
     if (result.collided) {
-        gctx.bricks.remove(result.index);
+        //var brick = &gctx.bricks.list.items[result.index];
+        //brick.ext.vy = -1;
+        var moving_brick = game.sprite.DisappearingMovingSprite.clone(gctx.bricks.remove(result.index));
+        moving_brick.ext.vy = 1;
+        try gctx.animations.add(moving_brick);
+
         gctx.ball.?.ext.vy = -gctx.ball.?.ext.vy;
         gctx.score += 10;
     }
@@ -225,7 +216,6 @@ fn run_get_ready(gctx: *GameContext) !void {
 }
 
 fn run_game_over(gctx: *GameContext) !void {
-    //gctx.ball.?.draw(gctx.zg_ctx);
     gctx.ball.?.update();
 
     gctx.bricks.draw(gctx.zg_ctx);
@@ -326,8 +316,7 @@ fn run_game_state(gctx: *GameContext) !bool {
     return true;
 }
 
-fn make_bricks(gctx: *GameContext) !zg.sprite.ListOfSprites {
-    var list = zg.sprite.ListOfSprites.init(std.heap.page_allocator);
+fn add_bricks(gctx: *GameContext) !void {
     var bounds = gctx.bounds;
     var bricks_y_offset: i32 = game.constant.BRICK_HEIGHT * 4 + gctx.level;
     for (range(game.constant.NUM_BRICK_ROWS), 0..) |_, r| {
@@ -335,34 +324,31 @@ fn make_bricks(gctx: *GameContext) !zg.sprite.ListOfSprites {
         for (range(game.constant.BRICKS_PER_COLUMN), 0..) |_, c| {
             var x = @intCast(i32, c * game.constant.BRICK_WIDTH);
             var y = bricks_y_offset + @intCast(i32, (r * game.constant.BRICK_HEIGHT));
-            var brick = game.sprite.Brick.new(canvas, bounds, x, y);
-            try list.append(brick);
+            var brick = game.sprite.BasicSprite.new(canvas, bounds, x, y);
+            try gctx.bricks.list.append(brick);
         }
     }
-    return list;
 }
 
 pub fn main() !void {
-    zg.system.init();
-
     var gctx = try GameContext.init();
     var zg_ctx = gctx.zg_ctx;
     var bounds = gctx.bounds;
 
     var ball_canvas = try game.shape.ball(zg_ctx, game.constant.BALL_RADIUS);
-    gctx.ball = @constCast(&(game.sprite.Ball.new(ball_canvas, bounds, 100, 100, 2, 2)));
+    gctx.ball = @constCast(&(game.sprite.BouncingSprite.new(ball_canvas, bounds, 100, 100, 2, 2)));
 
     var bat_canvas = try game.shape.bat(zg_ctx);
-    gctx.bat = @constCast(&(game.sprite.Sprite.new(bat_canvas, bounds, @divTrunc(bounds.width, 2), bounds.height - 2 * game.constant.BRICK_HEIGHT)));
+    gctx.bat = @constCast(&(game.sprite.BasicSprite.new(bat_canvas, bounds, @divTrunc(bounds.width, 2), bounds.height - 2 * game.constant.BRICK_HEIGHT)));
 
     var deadly_border_canvas = try game.shape.filled_rect(zg_ctx, game.constant.SCREEN_WIDTH, 4, game.color.red);
-    gctx.deadly_border = @constCast(&(game.sprite.Sprite.new(deadly_border_canvas, bounds, 0, bounds.height - 4)));
+    gctx.deadly_border = @constCast(&(game.sprite.BasicSprite.new(deadly_border_canvas, bounds, 0, bounds.height - 4)));
 
-    var list = try make_bricks(&gctx);
-    gctx.bricks.set(&list);
+    try add_bricks(&gctx);
 
     while (try run_game_state(&gctx)) {
         gctx.zg_ctx.renderer.present();
     }
+
     zg.system.shutdown();
 }
