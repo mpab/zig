@@ -108,7 +108,7 @@ fn run_attract(gctx: *GameContext) !void {
 
     var point = get_screen_center(gctx);
 
-    if ((0 <= gctx.state_ticker.counter_ms) and (gctx.state_ticker.counter_ms <= 2000)) {
+    if (gctx.state_ticker.counter_ms <= 2000) {
         try zg.text.draw_text_centered(&gctx.zg_ctx, "Press Mouse Button", point.x, point.y, 4);
     } else if ((2000 <= gctx.state_ticker.counter_ms) and (gctx.state_ticker.counter_ms <= 4000)) {
         try zg.text.draw_text_centered(&gctx.zg_ctx, "To Start", point.x, point.y, 4);
