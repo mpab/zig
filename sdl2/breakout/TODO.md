@@ -42,7 +42,6 @@
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)
   - links to libs/references other projects
-
 - sprite polymorphism (hacky version)
 - disappearing animation sprite for brick and score
 - text sprites (not using textures)
