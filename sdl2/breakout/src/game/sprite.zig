@@ -96,3 +96,53 @@ pub const DisappearingMovingSprite = struct {
         }
     }
 };
+
+pub const ScrollingSprite = struct {
+    pub fn text(ctx: *zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
+        var canvas = try shape.create_canvas(ctx, 1, 1);
+        return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
+    }
+
+    pub fn vartext(ctx: *zg.gfx.Context, var_string: []u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
+        var canvas = try shape.create_canvas(ctx, 1, 1);
+        return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = var_string } };
+    }
+
+    pub fn clone(base: zg.sprite.Sprite) zg.sprite.Sprite {
+        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = base.canvas, .bounds = base.bounds, .x = base.x, .y = base.y, .ext = base.ext };
+    }
+
+    fn v_draw(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
+        if (self.ext.state < 0) return; // termination state < 0
+        BasicSprite.v_draw(self, ctx);
+    }
+
+    fn v_draw_string(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
+        if (self.ext.state < 0) return; // termination state < 0
+        zg.text.draw_text_centered(ctx, self.ext.string, self.x, self.y, 2) catch return;
+    }
+
+    fn v_update(self: *zg.sprite.Sprite) void {
+        self.x += self.ext.dx * self.ext.vel;
+        self.y += self.ext.dy * self.ext.vel;
+
+        var sr = from_sprite(self);
+        var bounds = from_sdl_rect(self.bounds);
+
+        if (sr.left < bounds.left) {
+            sr.left = bounds.right;
+        }
+        if (sr.right > bounds.right) {
+            sr.left = bounds.left;
+        }
+        if (sr.top < bounds.top) {
+            sr.top = bounds.bottom;
+        }
+        if (sr.bottom > bounds.bottom) {
+            sr.top = bounds.top;
+        }
+
+        self.x = sr.left;
+        self.y = sr.top;
+    }
+};

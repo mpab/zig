@@ -48,3 +48,5 @@
 - text sprites (not using textures)
 - improved sprite velocity logic using {.vel .dx .dy}
 - supports zig v0.10.1 and v0.11.0 build/code
+- fixed drift issue with ticker
+- fixed bat debounce
