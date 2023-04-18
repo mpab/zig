@@ -3,7 +3,7 @@
 ## TODO
 
 - integrate/convert some of this: https://github.com/ferzkopp/SDL_gfx
-- implement transparency on textures
+
 - game (basic functionality)
   - remaining game states
   - sounds
@@ -14,6 +14,11 @@
 - improve sprite velocity logic using polar coordinates
 - installation and setup
   - fix zig sdl library hack
+- zig-game library
+  - font selection (currently hard-coded)
+  - implement transparency on textures
+  - sound support (use SDL mixer?)
+  - implement a polymorphic sprite group container (hacky version)
 
 ## DONE
 
@@ -37,8 +42,9 @@
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)
   - links to libs/references other projects
-- implement a polymorphic sprite group container (hacky version)
+
 - sprite polymorphism (hacky version)
 - disappearing animation sprite for brick and score
 - text sprites (not using textures)
 - improved sprite velocity logic using {.vel .dx .dy}
+- supports zig v0.10.1 and v0.11.0 build/code

@@ -15,15 +15,14 @@ pub fn draw_letter_scaled(ctx: *gfx.Context, letter: u8, pos: _type.Point, scali
     try ctx.renderer.setColorRGB(255, 255, 255);
     var long_long = bitmap(letter);
     var bit: u64 = 0x0000000000000001;
-    for (range(info.height), 0..) |_, r| {
-        _ = r;
-        //var row = [_]u8{ '1', '2', '3', '4', '5', '6', '7', '8' };
-        for (range(info.width), 0..) |_, c| {
-            _ = c;
+    for (range(info.height)) |_| {
+        for (range(info.width)) |_| {
             if (long_long & bit == bit) {
-                for (range(scaling), 0..) |_, j| {
-                    for (range(scaling), 0..) |_, i| {
-                        try ctx.renderer.drawPoint(plot_x + @intCast(i32, i), plot_y + @intCast(i32, j));
+                var j: i32 = 0;
+                while (j != scaling) : (j += 1) {
+                    var i: i32 = 0;
+                    while (i != scaling) : (i += 1) {
+                        try ctx.renderer.drawPoint(plot_x + i, plot_y + j);
                     }
                 }
             }

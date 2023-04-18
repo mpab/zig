@@ -14,7 +14,7 @@ pub const Sprite = struct {
     // hack for function override
     // TODO: make more idiomatic, or reimplement with a 'property bag' approach using key, value pairs
     const Update = *const fn (base: *Sprite) void;
-    const Draw = *const fn (base: Sprite, ctx: gfx.Context) void;
+    const Draw = *const fn (base: Sprite, ctx: *gfx.Context) void;
     __v_update: Update,
     __v_draw: Draw,
 
@@ -26,7 +26,7 @@ pub const Sprite = struct {
 
     ext: ExtendedAttributes, // replace with k, v dict of types?
 
-    pub fn draw(self: Sprite, ctx: gfx.Context) void {
+    pub fn draw(self: Sprite, ctx: *gfx.Context) void {
         self.__v_draw(self, ctx);
     }
 
@@ -121,20 +121,22 @@ pub const Group = struct {
     }
 
     pub fn update(self: *Group) void {
-        for (self.list.items, 0..) |_, idx| {
+        var idx: usize = 0;
+        while (idx != self.list.items.len) : (idx += 1) {
             var s = &self.list.items[idx];
             s.update();
         }
     }
 
-    pub fn draw(self: Group, ctx: gfx.Context) void {
+    pub fn draw(self: Group, ctx: *gfx.Context) void {
         for (self.list.items) |s| {
             s.draw(ctx);
         }
     }
 
     pub fn collision_result(self: Group, s1: *Sprite) CollisionResult {
-        for (self.list.items, 0..) |_, idx| {
+        var idx: usize = 0;
+        while (idx != self.list.items.len) : (idx += 1) {
             var s2 = &self.list.items[idx];
             if (collide_rect(s1, s2)) {
                 return .{ .collided = true, .index = idx, .sprite = s2 };

@@ -4,13 +4,13 @@ const color = @import("color.zig");
 
 pub const TextureRect = struct { texture: sdl.Texture, rect: sdl.Rectangle };
 
-pub fn create_canvas(ctx: zg.gfx.Context, width: i32, height: i32) !zg.gfx.Canvas {
+pub fn create_canvas(ctx: *zg.gfx.Context, width: i32, height: i32) !zg.gfx.Canvas {
     var texture = try sdl.createTexture(ctx.renderer, ctx.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
     return zg.gfx.Canvas.init(texture, rect.width, rect.height);
 }
 
-fn colored_texture(ctx: zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !TextureRect {
+fn colored_texture(ctx: *zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !TextureRect {
     var texture = try sdl.createTexture(ctx.renderer, ctx.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
     const r = ctx.renderer;
@@ -20,7 +20,7 @@ fn colored_texture(ctx: zg.gfx.Context, width: i32, height: i32, fill: sdl.Color
     return .{ .texture = texture, .rect = rect };
 }
 
-fn cleanup(ctx: zg.gfx.Context, tr: TextureRect) zg.gfx.Canvas {
+fn cleanup(ctx: *zg.gfx.Context, tr: TextureRect) zg.gfx.Canvas {
     ctx.reset_render_target();
     return zg.gfx.Canvas.init(tr.texture, tr.rect.width, tr.rect.height);
 }
@@ -113,7 +113,7 @@ pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
     }
 }
 
-pub fn ball(ctx: zg.gfx.Context, radius: i32) !zg.gfx.Canvas {
+pub fn ball(ctx: *zg.gfx.Context, radius: i32) !zg.gfx.Canvas {
     var radiusx2: i32 = radius * 2;
     var tr = try colored_texture(ctx, radiusx2, radiusx2, color.SCREEN_COLOR);
     const r = ctx.renderer;
@@ -128,7 +128,7 @@ pub fn ball(ctx: zg.gfx.Context, radius: i32) !zg.gfx.Canvas {
     return cleanup(ctx, tr);
 }
 
-pub fn brick(ctx: zg.gfx.Context, width: i32, height: i32, row: i32) !zg.gfx.Canvas {
+pub fn brick(ctx: *zg.gfx.Context, width: i32, height: i32, row: i32) !zg.gfx.Canvas {
     var fill_color = color.BRICK_FILL_COLOR;
 
     switch (@mod(row, 6)) {
@@ -155,7 +155,7 @@ pub fn brick(ctx: zg.gfx.Context, width: i32, height: i32, row: i32) !zg.gfx.Can
     return cleanup(ctx, tr);
 }
 
-pub fn bat(ctx: zg.gfx.Context) !zg.gfx.Canvas {
+pub fn bat(ctx: *zg.gfx.Context) !zg.gfx.Canvas {
     var tr = try colored_texture(ctx, 80, 16, color.SCREEN_COLOR);
 
     const r = ctx.renderer;
@@ -169,7 +169,7 @@ pub fn bat(ctx: zg.gfx.Context) !zg.gfx.Canvas {
     return cleanup(ctx, tr);
 }
 
-pub fn filled_rect(ctx: zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !zg.gfx.Canvas {
+pub fn filled_rect(ctx: *zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !zg.gfx.Canvas {
     var tr = try colored_texture(ctx, width, height, fill);
     return cleanup(ctx, tr);
 }

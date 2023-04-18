@@ -1,42 +1,41 @@
 const gfx = @import("gfx.zig");
 const util = @import("util.zig");
-const primitive = @import("primitive.zig");
+const _type = @import("_type.zig");
 const range = util.range;
 const log = util.log;
 
-pub fn print_letter(letter: u8) void {
-    var long_long = info.bitmap(letter);
+// pub fn print_letter(letter: u8) void {
+//     var long_long = info.bitmap(letter);
 
-    var bit: u64 = 0x8000000000000000;
-    for (range(8)) |_| {
-        var row = [_]u8{ '1', '2', '3', '4', '5', '6', '7', '8' };
-        for (range(8), 0..) |_, c| {
-            row[c] = if (long_long & bit == bit) 'X' else ' ';
-            bit = bit >> 1;
-        }
-        log("{s}\n", .{row});
-    }
-}
+//     var bit: u64 = 0x8000000000000000;
+//     for (range(8)) |_| {
+//         var row = [_]u8{ '1', '2', '3', '4', '5', '6', '7', '8' };
+//         for (range(8), 0..) |_, c| {
+//             row[c] = if (long_long & bit == bit) 'X' else ' ';
+//             bit = bit >> 1;
+//         }
+//         log("{s}\n", .{row});
+//     }
+// }
 
 pub fn bitmap(letter: u8) u64 {
     return info.data[letter];
 }
 
-pub fn draw_letter_scaled(ctx: *gfx.Context, letter: u8, pos: primitive.Point, scaling: u8) !void {
+pub fn draw_letter_scaled(ctx: *gfx.Context, letter: u8, pos: _type.Point, scaling: u8) !void {
     var plot_x: i32 = pos.x;
     var plot_y: i32 = pos.y;
     try ctx.renderer.setColorRGB(255, 255, 255);
     var long_long = bitmap(letter);
     var bit: u64 = 0x8000000000000000;
-    for (range(info.height), 0..) |_, r| {
-        _ = r;
-        //var row = [_]u8{ '1', '2', '3', '4', '5', '6', '7', '8' };
-        for (range(info.width), 0..) |_, c| {
-            _ = c;
+    for (range(info.height)) |_| {
+        for (range(info.width)) |_| {
             if (long_long & bit == bit) {
-                for (range(scaling), 0..) |_, j| {
-                    for (range(scaling), 0..) |_, i| {
-                        try ctx.renderer.drawPoint(plot_x + @intCast(i32, i), plot_y + @intCast(i32, j));
+                var j: i32 = 0;
+                while (j != scaling) : (j += 1) {
+                    var i: i32 = 0;
+                    while (i != scaling) : (i += 1) {
+                        try ctx.renderer.drawPoint(plot_x + i, plot_y + j);
                     }
                 }
             }
@@ -48,7 +47,7 @@ pub fn draw_letter_scaled(ctx: *gfx.Context, letter: u8, pos: primitive.Point, s
     }
 }
 
-pub const info = primitive.FontInfo{
+pub const info = _type.FontInfo{
     .width = 8,
     .height = 8,
     .data = [_]u64{

@@ -21,7 +21,7 @@ const GameState = enum {
 const NameAndScore = struct {};
 
 const GameContext = struct {
-    zg_ctx: zg.gfx.Context,
+    zg_ctx: *zg.gfx.Context,
     level: u16,
     score: u64,
     lives: u64,
@@ -36,19 +36,18 @@ const GameContext = struct {
     bat: ?*zg.sprite.Sprite = null,
     deadly_border: ?*zg.sprite.Sprite = null,
 
-    fn init() !GameContext {
+    fn init(zgContext: *zg.gfx.Context) !GameContext {
         // don't need to cleanup, as the window lasts the lifetime of the program
         // defer zg.sdl.SDL_DestroyWindow(window);
-        var zg_ctx = zg.gfx.Context.init(game.constant.SCREEN_WIDTH, game.constant.SCREEN_HEIGHT) catch |err| return err;
 
         return .{
-            .zg_ctx = zg_ctx,
+            .zg_ctx = zgContext,
             .level = 1,
             .lives = 0,
             .score = 0,
             .high_score = 0,
             .game_state = GameState.ATTRACT,
-            .bounds = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = zg_ctx.size.width_pixels, .height = zg_ctx.size.height_pixels },
+            .bounds = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = zgContext.size.width_pixels, .height = zgContext.size.height_pixels },
             .bricks = zg.sprite.Group.init(),
             .animations = zg.sprite.Group.init(),
             .state_ticker = game.time.Ticker.init(),
@@ -109,9 +108,9 @@ fn run_attract(gctx: *GameContext) !void {
     var point = get_screen_center(gctx);
 
     if (gctx.state_ticker.counter_ms <= 2000) {
-        try zg.text.draw_text_centered(&gctx.zg_ctx, "Press Mouse Button", point.x, point.y, 4);
+        try zg.text.draw_text_centered(gctx.zg_ctx, "Press Mouse Button", point.x, point.y, 4);
     } else if ((2000 <= gctx.state_ticker.counter_ms) and (gctx.state_ticker.counter_ms <= 4000)) {
-        try zg.text.draw_text_centered(&gctx.zg_ctx, "To Start", point.x, point.y, 4);
+        try zg.text.draw_text_centered(gctx.zg_ctx, "To Start", point.x, point.y, 4);
     } else {
         set_game_state(gctx, GameState.GAME_OVER);
     }
@@ -129,7 +128,7 @@ fn draw_level_lives_score(gctx: *GameContext) !void {
         "Level: {d} Lives: {d} Score: {d}",
         .{ gctx.level, gctx.lives, gctx.score },
     );
-    try zg.text.draw_text(&gctx.zg_ctx, string, 4, 4, 2);
+    try zg.text.draw_text(gctx.zg_ctx, string, 4, 4, 2);
     defer std.heap.page_allocator.free(string);
 }
 
@@ -151,7 +150,7 @@ fn run_game(gctx: *GameContext) !void {
     // handle brick/ball collision
     var result = gctx.bricks.collision_result(gctx.ball.?);
     if (result.collided) {
-        //var brick = &gctx.bricks.list.items[result.index];
+        //var brick = gctx.bricks.list.items[result.index];
         //brick.ext.vy = -1;
         var moving_brick = game.sprite.DisappearingMovingSprite.clone(gctx.bricks.remove(result.index));
         moving_brick.ext.dy = 1;
@@ -191,9 +190,9 @@ fn run_life_lost(gctx: *GameContext) !void {
     if (gctx.state_ticker.counter_ms <= 2000) {
         var point = get_screen_center(gctx);
         if (gctx.lives == 1) {
-            try zg.text.draw_text_centered(&gctx.zg_ctx, "No Lives Left!", point.x, point.y, 4);
+            try zg.text.draw_text_centered(gctx.zg_ctx, "No Lives Left!", point.x, point.y, 4);
         } else {
-            try zg.text.draw_text_centered(&gctx.zg_ctx, "You Lost a Life!", point.x, point.y, 4);
+            try zg.text.draw_text_centered(gctx.zg_ctx, "You Lost a Life!", point.x, point.y, 4);
         }
     } else {
         gctx.lives -= 1;
@@ -218,7 +217,7 @@ fn run_get_ready(gctx: *GameContext) !void {
 
     if (gctx.state_ticker.counter_ms < 2000) {
         var point = get_screen_center(gctx);
-        try zg.text.draw_text_centered(&gctx.zg_ctx, "Get Ready!", point.x, point.y, @intCast(u8, gctx.state_ticker.counter));
+        try zg.text.draw_text_centered(gctx.zg_ctx, "Get Ready!", point.x, point.y, @intCast(u8, gctx.state_ticker.counter));
     } else {
         set_game_state(gctx, GameState.RUNNING);
     }
@@ -235,7 +234,7 @@ fn run_game_over(gctx: *GameContext) !void {
 
     var x = gctx.ball.?.x;
     var y = gctx.ball.?.y;
-    try zg.text.draw_text_centered(&gctx.zg_ctx, "Game Over", x, y, 4);
+    try zg.text.draw_text_centered(gctx.zg_ctx, "Game Over", x, y, 4);
 
     if (gctx.state_ticker.counter_ms > 2000) {
         set_game_state(gctx, GameState.ATTRACT);
@@ -247,9 +246,9 @@ fn run_game_over_high_score(gctx: *GameContext) !void {
 
     var point = get_screen_center(gctx);
     if (gctx.state_ticker.counter_ms <= 2000) {
-        try zg.text.draw_text_centered(&gctx.zg_ctx, "Congratulations!", point.x, point.y, 4);
+        try zg.text.draw_text_centered(gctx.zg_ctx, "Congratulations!", point.x, point.y, 4);
     } else if (gctx.state_ticker.counter_ms <= 4000) {
-        try zg.text.draw_text_centered(&gctx.zg_ctx, "New High Score!", point.x, point.y, 4);
+        try zg.text.draw_text_centered(gctx.zg_ctx, "New High Score!", point.x, point.y, 4);
     } else {
         set_game_state(gctx, GameState.ENTER_HIGH_SCORE);
     }
@@ -264,7 +263,7 @@ fn run_next_level(gctx: *GameContext) !void {
 
 fn run_level_complete(gctx: *GameContext) !void {
     var point = get_screen_center(gctx);
-    try zg.text.draw_text_centered(&gctx.zg_ctx, "Level Complete!", point.x, point.y, 3);
+    try zg.text.draw_text_centered(gctx.zg_ctx, "Level Complete!", point.x, point.y, 3);
 
     if (gctx.state_ticker.counter_ms > 2000) {
         set_game_state(gctx, GameState.NEXT_LEVEL);
@@ -276,7 +275,7 @@ fn run_level_complete(gctx: *GameContext) !void {
 fn run_enter_high_score(gctx: *GameContext) !void {
     if (gctx.state_ticker.counter_ms <= 2000) {
         var point = get_screen_center(gctx);
-        try zg.text.draw_text_centered(&gctx.zg_ctx, "Enter Your Name", point.x, point.y, 4);
+        try zg.text.draw_text_centered(gctx.zg_ctx, "Enter Your Name", point.x, point.y, 4);
     } else {
         set_game_state(gctx, GameState.ATTRACT);
     }
@@ -350,11 +349,13 @@ fn add_bricks(gctx: *GameContext) !void {
     // try gctx.bricks.list.append(game.sprite.BasicSprite.new(canvas, bounds, 20, 200));
 
     var bricks_y_offset: i32 = game.constant.BRICK_HEIGHT * (gctx.level + 5);
-    for (range(game.constant.NUM_BRICK_ROWS), 0..) |_, r| {
-        var canvas = try game.shape.brick(gctx.zg_ctx, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, @intCast(i32, r));
-        for (range(game.constant.BRICKS_PER_COLUMN), 0..) |_, c| {
+    var r: i32 = 0;
+    while (r != game.constant.NUM_BRICK_ROWS) : (r += 1) {
+        var canvas = try game.shape.brick(gctx.zg_ctx, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, r);
+        var c: i32 = 0;
+        while (c != game.constant.BRICKS_PER_COLUMN) : (c += 1) {
             var x = @intCast(i32, c * game.constant.BRICK_WIDTH);
-            var y = bricks_y_offset + @intCast(i32, (r * game.constant.BRICK_HEIGHT));
+            var y = bricks_y_offset + r * game.constant.BRICK_HEIGHT;
             var brick = game.sprite.BasicSprite.new(canvas, bounds, x, y);
             try gctx.bricks.list.append(brick);
         }
@@ -362,16 +363,38 @@ fn add_bricks(gctx: *GameContext) !void {
 }
 
 pub fn main() !void {
-    var gctx = try GameContext.init();
+    zg.system.init();
+
+    var zgContext = try zg.gfx.Context.init(game.constant.SCREEN_WIDTH, game.constant.SCREEN_HEIGHT);
+
+    //var gctx = GameContext.init(&zgContext); <- const weirdness in version 0.10.1...
+    // fix: init using anon struct
+
+    var gctx: GameContext = .{
+        .zg_ctx = &zgContext,
+        .level = 1,
+        .lives = 0,
+        .score = 0,
+        .high_score = 0,
+        .game_state = GameState.ATTRACT,
+        .bounds = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = zgContext.size.width_pixels, .height = zgContext.size.height_pixels },
+        .bricks = zg.sprite.Group.init(),
+        .animations = zg.sprite.Group.init(),
+        .state_ticker = game.time.Ticker.init(),
+        .ball_speed_ticker = game.time.Ticker.init(),
+    };
 
     var zg_ctx = gctx.zg_ctx;
     var bounds = gctx.bounds;
     var ball_canvas = try game.shape.ball(zg_ctx, game.constant.BALL_RADIUS);
-    gctx.ball = @constCast(&(game.sprite.BouncingSprite.new(ball_canvas, bounds, -100, -100, 0, 0, 0)));
+    var ball = game.sprite.BouncingSprite.new(ball_canvas, bounds, -100, -100, 0, 0, 0);
+    gctx.ball = &ball;
     var bat_canvas = try game.shape.bat(zg_ctx);
-    gctx.bat = @constCast(&(game.sprite.BasicSprite.new(bat_canvas, bounds, @divTrunc(bounds.width, 2), bounds.height - 2 * game.constant.BRICK_HEIGHT)));
+    var bat = game.sprite.BasicSprite.new(bat_canvas, bounds, @divTrunc(bounds.width, 2), bounds.height - 2 * game.constant.BRICK_HEIGHT);
+    gctx.bat = &bat;
     var deadly_border_canvas = try game.shape.filled_rect(zg_ctx, game.constant.SCREEN_WIDTH, 4, game.color.red);
-    gctx.deadly_border = @constCast(&(game.sprite.BasicSprite.new(deadly_border_canvas, bounds, 0, bounds.height - 4)));
+    var deadly_border = game.sprite.BasicSprite.new(deadly_border_canvas, bounds, 0, bounds.height - 4);
+    gctx.deadly_border = &deadly_border;
     reset_ball(&gctx);
 
     while (try run_game_state(&gctx)) {

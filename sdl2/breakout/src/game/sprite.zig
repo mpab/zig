@@ -19,7 +19,7 @@ pub const BasicSprite = struct {
         return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(0, 0, 0) };
     }
 
-    fn v_draw(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
+    fn v_draw(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
         var src_rect = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = self.canvas.width, .height = self.canvas.height };
         var dest_rect = zg.sdl.Rectangle{ .x = self.x, .y = self.y, .width = self.canvas.width, .height = self.canvas.height };
         ctx.renderer.copy(self.canvas.texture, dest_rect, src_rect) catch return;
@@ -65,7 +65,7 @@ pub const BouncingSprite = struct {
 };
 
 pub const DisappearingMovingSprite = struct {
-    pub fn text(ctx: zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
+    pub fn text(ctx: *zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
         var canvas = try shape.create_canvas(ctx, 1, 1);
         return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
     }
@@ -74,14 +74,14 @@ pub const DisappearingMovingSprite = struct {
         return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = base.canvas, .bounds = base.bounds, .x = base.x, .y = base.y, .ext = base.ext };
     }
 
-    fn v_draw(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
+    fn v_draw(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
         if (self.ext.state < 0) return; // termination state < 0
         BasicSprite.v_draw(self, ctx);
     }
 
-    fn v_draw_string(self: zg.sprite.Sprite, ctx: zg.gfx.Context) void {
+    fn v_draw_string(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
         if (self.ext.state < 0) return; // termination state < 0
-        zg.text.draw_text(@constCast(&ctx), self.ext.string, self.x, self.y, 2) catch return;
+        zg.text.draw_text(ctx, self.ext.string, self.x, self.y, 2) catch return;
     }
 
     fn v_update(self: *zg.sprite.Sprite) void {
