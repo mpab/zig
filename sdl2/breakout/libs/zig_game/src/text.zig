@@ -13,10 +13,14 @@ const range = util.range;
 // extend later with pre-rendered textures
 // use this in all text draw calls
 
+pub fn draw(ctx: *gfx.Context, letter: u8, x: i32, y: i32, scaling: u8) !void {
+    try font.draw(ctx, letter, .{ .x = x, .y = y }, scaling);
+}
+
 pub fn draw_text(ctx: *gfx.Context, text: []const u8, x: i32, y: i32, scaling: u8) !void {
     var dx: i32 = 0;
     for (text) |letter| {
-        try font.draw_letter_scaled(ctx, letter, .{ .x = x + dx, .y = y }, scaling);
+        try draw(ctx, letter, x + dx, y, scaling);
         dx += font.info.width * scaling;
     }
 }
@@ -26,7 +30,7 @@ pub fn draw_text_centered(ctx: *gfx.Context, text: []const u8, x: i32, y: i32, s
     var center_y: i32 = y - (font.info.height * scaling) / 2;
     var dx: i32 = 0;
     for (text) |letter| {
-        try font.draw_letter_scaled(ctx, letter, .{ .x = center_x + dx, .y = center_y }, scaling);
+        try draw(ctx, letter, center_x + dx, center_y, scaling);
         dx += font.info.width * scaling;
     }
 }

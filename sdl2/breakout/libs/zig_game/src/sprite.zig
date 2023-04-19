@@ -106,11 +106,7 @@ pub fn collide_rect(s1: *Sprite, s2: *Sprite) bool {
 
 pub const ListOfSprites = std.ArrayList(Sprite);
 pub const Group = struct {
-    list: ListOfSprites,
-
-    pub fn init() Group {
-        return Group{ .list = ListOfSprites.init(std.heap.page_allocator) };
-    }
+    list: ListOfSprites = ListOfSprites.init(std.heap.page_allocator),
 
     pub fn add(self: *Group, s: Sprite) !void {
         try self.list.append(s);

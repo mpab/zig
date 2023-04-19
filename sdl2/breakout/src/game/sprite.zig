@@ -119,7 +119,7 @@ pub const ScrollingSprite = struct {
 
     fn v_draw_string(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
         if (self.ext.state < 0) return; // termination state < 0
-        zg.text.draw_text_centered(ctx, self.ext.string, self.x, self.y, 2) catch return;
+        zg.text.draw_text_centered(ctx, self.ext.string, self.x, self.y, 3) catch return;
     }
 
     fn v_update(self: *zg.sprite.Sprite) void {

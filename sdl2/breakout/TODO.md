@@ -5,9 +5,7 @@
 - integrate/convert some of this: https://github.com/ferzkopp/SDL_gfx
 
 - game (basic functionality)
-  - remaining game states
   - sounds
-  - high scores
 - game (improved functionality)
   - gradient font rendering
   - drawing: more primitives (filled circle, rectangle with rounded edges, ...)
@@ -24,6 +22,8 @@
 
 - basic SDL bootstrapping
 - game (basic functionality)
+  - remaining game states
+  - high scores
   - levels
   - most game states
   - ticker/state ticker
