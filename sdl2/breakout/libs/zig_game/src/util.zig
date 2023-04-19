@@ -1,7 +1,7 @@
 // -------------------------------------------------------
 // language extensions/helpers
 
-// TODO: use a temple approach fr this where the returned indexed type can be specified as u8, i32, ...
+// TODO: use a template approach for this where the returned indexed type can be specified as u8, i32, ...
 // to prevent messy casting on the index
 pub fn range(len: usize) []const void {
     return @as([*]void, undefined)[0..len];

@@ -1,28 +1,29 @@
-const sdl = @import("sdl-wrapper");
-const zg = @import("zig-game");
+const ziggame = @import("zig-game"); // namespace
+const ZigGame = ziggame.ZigGame; // context
+const sdl = @import("zig-game").sdl;
 const color = @import("color.zig");
 
 pub const TextureRect = struct { texture: sdl.Texture, rect: sdl.Rectangle };
 
-pub fn create_canvas(ctx: *zg.gfx.Context, width: i32, height: i32) !zg.gfx.Canvas {
-    var texture = try sdl.createTexture(ctx.renderer, ctx.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
+pub fn create_canvas(zg: *ZigGame, width: i32, height: i32) !ZigGame.Canvas {
+    var texture = try sdl.createTexture(zg.renderer, zg.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
-    return zg.gfx.Canvas.init(texture, rect.width, rect.height);
+    return ZigGame.Canvas.init(texture, rect.width, rect.height);
 }
 
-fn colored_texture(ctx: *zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !TextureRect {
-    var texture = try sdl.createTexture(ctx.renderer, ctx.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
+fn colored_texture(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !TextureRect {
+    var texture = try sdl.createTexture(zg.renderer, zg.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
-    const r = ctx.renderer;
+    const r = zg.renderer;
     try r.setTarget(texture);
     try r.setColor(fill);
     try r.fillRect(rect);
     return .{ .texture = texture, .rect = rect };
 }
 
-fn cleanup(ctx: *zg.gfx.Context, tr: TextureRect) zg.gfx.Canvas {
-    ctx.reset_render_target();
-    return zg.gfx.Canvas.init(tr.texture, tr.rect.width, tr.rect.height);
+fn cleanup(zg: *ZigGame, tr: TextureRect) ZigGame.Canvas {
+    zg.reset_render_target();
+    return ZigGame.Canvas.init(tr.texture, tr.rect.width, tr.rect.height);
 }
 
 fn resize(rect: sdl.Rectangle, by: i32) sdl.Rectangle {
@@ -113,22 +114,22 @@ pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
     }
 }
 
-pub fn ball(ctx: *zg.gfx.Context, radius: i32) !zg.gfx.Canvas {
+pub fn ball(zg: *ZigGame, radius: i32) !ZigGame.Canvas {
     var radiusx2: i32 = radius * 2;
-    var tr = try colored_texture(ctx, radiusx2, radiusx2, color.SCREEN_COLOR);
-    const r = ctx.renderer;
+    var tr = try colored_texture(zg, radiusx2, radiusx2, color.SCREEN_COLOR);
+    const r = zg.renderer;
     try r.setColor(color.BALL_BORDER_COLOR);
-    try circle(ctx.renderer, radius, radius, radius - 1);
+    try circle(zg.renderer, radius, radius, radius - 1);
     try r.setColor(color.BALL_FILL_COLOR);
-    try circle(ctx.renderer, radius, radius, radius - 2);
-    try circle(ctx.renderer, radius, radius, radius - 3);
-    try circle(ctx.renderer, radius, radius, radius - 4);
-    try circle(ctx.renderer, radius, radius, radius - 5);
+    try circle(zg.renderer, radius, radius, radius - 2);
+    try circle(zg.renderer, radius, radius, radius - 3);
+    try circle(zg.renderer, radius, radius, radius - 4);
+    try circle(zg.renderer, radius, radius, radius - 5);
 
-    return cleanup(ctx, tr);
+    return cleanup(zg, tr);
 }
 
-pub fn brick(ctx: *zg.gfx.Context, width: i32, height: i32, row: i32) !zg.gfx.Canvas {
+pub fn brick(zg: *ZigGame, width: i32, height: i32, row: i32) !ZigGame.Canvas {
     var fill_color = color.BRICK_FILL_COLOR;
 
     switch (@mod(row, 6)) {
@@ -141,24 +142,24 @@ pub fn brick(ctx: *zg.gfx.Context, width: i32, height: i32, row: i32) !zg.gfx.Ca
         else => unreachable,
     }
 
-    var tr = try colored_texture(ctx, width, height, fill_color);
+    var tr = try colored_texture(zg, width, height, fill_color);
 
-    const r = ctx.renderer;
-    try r.setColor(zg.color.saturate(fill_color, -64));
+    const r = zg.renderer;
+    try r.setColor(ziggame.color.saturate(fill_color, -64));
     try r.drawLine(0, height - 1, width, height - 1);
     try r.drawLine(width - 1, 0, width - 1, height);
 
-    try r.setColor(zg.color.saturate(fill_color, 64));
+    try r.setColor(ziggame.color.saturate(fill_color, 64));
     try r.drawLine(0, 0, width, 0);
     try r.drawLine(0, 0, 0, height);
 
-    return cleanup(ctx, tr);
+    return cleanup(zg, tr);
 }
 
-pub fn bat(ctx: *zg.gfx.Context) !zg.gfx.Canvas {
-    var tr = try colored_texture(ctx, 80, 16, color.SCREEN_COLOR);
+pub fn bat(zg: *ZigGame) !ZigGame.Canvas {
+    var tr = try colored_texture(zg, 80, 16, color.SCREEN_COLOR);
 
-    const r = ctx.renderer;
+    const r = zg.renderer;
     try r.setColor(color.BAT_BORDER_COLOR);
     try r.fillRect(tr.rect);
 
@@ -166,10 +167,10 @@ pub fn bat(ctx: *zg.gfx.Context) !zg.gfx.Canvas {
     try r.setColor(color.BAT_FILL_COLOR);
     try r.fillRect(inner);
 
-    return cleanup(ctx, tr);
+    return cleanup(zg, tr);
 }
 
-pub fn filled_rect(ctx: *zg.gfx.Context, width: i32, height: i32, fill: sdl.Color) !zg.gfx.Canvas {
-    var tr = try colored_texture(ctx, width, height, fill);
-    return cleanup(ctx, tr);
+pub fn filled_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !ZigGame.Canvas {
+    var tr = try colored_texture(zg, width, height, fill);
+    return cleanup(zg, tr);
 }

@@ -1,41 +1,43 @@
 const std = @import("std");
-const zg = @import("zig-game");
+const ziggame = @import("zig-game"); // namespace
+const ZigGame = ziggame.ZigGame; // context
+const sdl = @import("zig-game").sdl;
 const shape = @import("shape.zig");
 
-pub fn from_sdl_rect(r: zg.sdl.Rectangle) zg._type.Rect {
+pub fn from_sdl_rect(r: sdl.Rectangle) ZigGame.Rect {
     return .{ .left = r.x, .top = r.y, .right = r.x + r.width, .bottom = r.y + r.height };
 }
 
-pub fn from_sprite(s: *zg.sprite.Sprite) zg._type.Rect {
+pub fn from_sprite(s: *ziggame.sprite.Sprite) ZigGame.Rect {
     return .{ .left = s.x, .top = s.y, .right = s.x + s.canvas.width, .bottom = s.y + s.canvas.height };
 }
 
-fn init_ext(vel: i32, dx: i32, dy: i32) zg.sprite.ExtendedAttributes {
+fn init_ext(vel: i32, dx: i32, dy: i32) ziggame.sprite.ExtendedAttributes {
     return .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = "" };
 }
 
 pub const BasicSprite = struct {
-    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32) zg.sprite.Sprite {
+    pub fn new(canvas: ZigGame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32) ziggame.sprite.Sprite {
         return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(0, 0, 0) };
     }
 
-    fn v_draw(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
-        var src_rect = zg.sdl.Rectangle{ .x = 0, .y = 0, .width = self.canvas.width, .height = self.canvas.height };
-        var dest_rect = zg.sdl.Rectangle{ .x = self.x, .y = self.y, .width = self.canvas.width, .height = self.canvas.height };
-        ctx.renderer.copy(self.canvas.texture, dest_rect, src_rect) catch return;
+    fn v_draw(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
+        var src_rect = sdl.Rectangle{ .x = 0, .y = 0, .width = self.canvas.width, .height = self.canvas.height };
+        var dest_rect = sdl.Rectangle{ .x = self.x, .y = self.y, .width = self.canvas.width, .height = self.canvas.height };
+        zg.renderer.copy(self.canvas.texture, dest_rect, src_rect) catch return;
     }
 
-    pub fn v_update(self: *zg.sprite.Sprite) void {
+    pub fn v_update(self: *ziggame.sprite.Sprite) void {
         _ = self;
     }
 };
 
 pub const BouncingSprite = struct {
-    pub fn new(canvas: zg.gfx.Canvas, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) zg.sprite.Sprite {
+    pub fn new(canvas: ZigGame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) ziggame.sprite.Sprite {
         return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(vel, dx, dy) };
     }
 
-    fn v_update(self: *zg.sprite.Sprite) void {
+    fn v_update(self: *ziggame.sprite.Sprite) void {
         self.x += self.ext.dx * self.ext.vel;
         self.y += self.ext.dy * self.ext.vel;
 
@@ -65,26 +67,26 @@ pub const BouncingSprite = struct {
 };
 
 pub const DisappearingMovingSprite = struct {
-    pub fn text(ctx: *zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
-        var canvas = try shape.create_canvas(ctx, 1, 1);
+    pub fn text(zg: *ZigGame, c_string: [*c]const u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
+        var canvas = try shape.create_canvas(zg, 1, 1);
         return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
     }
 
-    pub fn clone(base: zg.sprite.Sprite) zg.sprite.Sprite {
+    pub fn clone(base: ziggame.sprite.Sprite) ziggame.sprite.Sprite {
         return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = base.canvas, .bounds = base.bounds, .x = base.x, .y = base.y, .ext = base.ext };
     }
 
-    fn v_draw(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
+    fn v_draw(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
         if (self.ext.state < 0) return; // termination state < 0
-        BasicSprite.v_draw(self, ctx);
+        BasicSprite.v_draw(self, zg);
     }
 
-    fn v_draw_string(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
+    fn v_draw_string(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
         if (self.ext.state < 0) return; // termination state < 0
-        zg.text.draw_text(ctx, self.ext.string, self.x, self.y, 2) catch return;
+        ziggame.font.render(zg, self.ext.string, self.x, self.y, 2) catch return;
     }
 
-    fn v_update(self: *zg.sprite.Sprite) void {
+    fn v_update(self: *ziggame.sprite.Sprite) void {
         if (self.ext.state < 0) return; // termination state < 0
 
         if (self.ext.state < 32) {
@@ -98,31 +100,31 @@ pub const DisappearingMovingSprite = struct {
 };
 
 pub const ScrollingSprite = struct {
-    pub fn text(ctx: *zg.gfx.Context, c_string: [*c]const u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
-        var canvas = try shape.create_canvas(ctx, 1, 1);
+    pub fn text(zg: *ZigGame, c_string: [*c]const u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
+        var canvas = try shape.create_canvas(zg, 1, 1);
         return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
     }
 
-    pub fn vartext(ctx: *zg.gfx.Context, var_string: []u8, bounds: zg.sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !zg.sprite.Sprite {
-        var canvas = try shape.create_canvas(ctx, 1, 1);
+    pub fn vartext(zg: *ZigGame, var_string: []u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
+        var canvas = try shape.create_canvas(zg, 1, 1);
         return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = var_string } };
     }
 
-    pub fn clone(base: zg.sprite.Sprite) zg.sprite.Sprite {
+    pub fn clone(base: ziggame.sprite.Sprite) ziggame.sprite.Sprite {
         return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = base.canvas, .bounds = base.bounds, .x = base.x, .y = base.y, .ext = base.ext };
     }
 
-    fn v_draw(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
+    fn v_draw(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
         if (self.ext.state < 0) return; // termination state < 0
-        BasicSprite.v_draw(self, ctx);
+        BasicSprite.v_draw(self, zg);
     }
 
-    fn v_draw_string(self: zg.sprite.Sprite, ctx: *zg.gfx.Context) void {
+    fn v_draw_string(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
         if (self.ext.state < 0) return; // termination state < 0
-        zg.text.draw_text_centered(ctx, self.ext.string, self.x, self.y, 3) catch return;
+        ziggame.font.render_centered(zg, self.ext.string, self.x, self.y, 3) catch return;
     }
 
-    fn v_update(self: *zg.sprite.Sprite) void {
+    fn v_update(self: *ziggame.sprite.Sprite) void {
         self.x += self.ext.dx * self.ext.vel;
         self.y += self.ext.dy * self.ext.vel;
 

@@ -1,5 +1,5 @@
 const std = @import("std");
-const gfx = @import("gfx.zig");
+const ZigGame = @import("zig_game.zig").ZigGame;
 const sdl = @import("sdl-wrapper"); // configured in build.zig
 
 pub const ExtendedAttributes = struct {
@@ -14,20 +14,20 @@ pub const Sprite = struct {
     // hack for function override
     // TODO: make more idiomatic, or reimplement with a 'property bag' approach using key, value pairs
     const Update = *const fn (base: *Sprite) void;
-    const Draw = *const fn (base: Sprite, ctx: *gfx.Context) void;
+    const Draw = *const fn (base: Sprite, zg: *ZigGame) void;
     __v_update: Update,
     __v_draw: Draw,
 
     // attributes
-    canvas: gfx.Canvas,
+    canvas: ZigGame.Canvas,
     bounds: sdl.Rectangle,
     x: i32,
     y: i32,
 
     ext: ExtendedAttributes, // replace with k, v dict of types?
 
-    pub fn draw(self: Sprite, ctx: *gfx.Context) void {
-        self.__v_draw(self, ctx);
+    pub fn draw(self: Sprite, zg: *ZigGame) void {
+        self.__v_draw(self, zg);
     }
 
     pub fn update(self: *Sprite) void {
@@ -124,9 +124,9 @@ pub const Group = struct {
         }
     }
 
-    pub fn draw(self: Group, ctx: *gfx.Context) void {
+    pub fn draw(self: Group, zg: *ZigGame) void {
         for (self.list.items) |s| {
-            s.draw(ctx);
+            s.draw(zg);
         }
     }
 

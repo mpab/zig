@@ -1,4 +1,4 @@
-const gfx = @import("gfx.zig");
+const ZigGame = @import("zig_game.zig").ZigGame;
 const util = @import("util.zig");
 const _type = @import("_type.zig");
 const range = util.range;
@@ -9,10 +9,10 @@ pub fn bitmap(letter: u8) u64 {
 
 // https://github.com/dhepper/font8x8/blob/master/font8x8_basic.h
 
-pub fn draw(ctx: *gfx.Context, letter: u8, pos: _type.Point, scaling: u8) !void {
+pub fn draw(zg: *ZigGame, letter: u8, pos: _type.Point, scaling: u8) !void {
     var plot_x: i32 = pos.x;
     var plot_y: i32 = pos.y + info.height * scaling;
-    try ctx.renderer.setColorRGB(255, 255, 255);
+    try zg.renderer.setColorRGB(255, 255, 255);
     var long_long = bitmap(letter);
     var bit: u64 = 0x0000000000000001;
     for (range(info.height)) |_| {
@@ -22,7 +22,7 @@ pub fn draw(ctx: *gfx.Context, letter: u8, pos: _type.Point, scaling: u8) !void 
                 while (j != scaling) : (j += 1) {
                     var i: i32 = 0;
                     while (i != scaling) : (i += 1) {
-                        try ctx.renderer.drawPoint(plot_x + i, plot_y + j);
+                        try zg.renderer.drawPoint(plot_x + i, plot_y + j);
                     }
                 }
             }
