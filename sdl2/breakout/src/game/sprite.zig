@@ -4,11 +4,11 @@ const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
 const shape = @import("shape.zig");
 
-pub fn from_sdl_rect(r: sdl.Rectangle) ZigGame.Rect {
+pub fn from_sdl_rect(r: sdl.Rectangle) ziggame.Rect {
     return .{ .left = r.x, .top = r.y, .right = r.x + r.width, .bottom = r.y + r.height };
 }
 
-pub fn from_sprite(s: *ziggame.sprite.Sprite) ZigGame.Rect {
+pub fn from_sprite(s: *ziggame.sprite.Sprite) ziggame.Rect {
     return .{ .left = s.x, .top = s.y, .right = s.x + s.canvas.width, .bottom = s.y + s.canvas.height };
 }
 
@@ -17,7 +17,7 @@ fn init_ext(vel: i32, dx: i32, dy: i32) ziggame.sprite.ExtendedAttributes {
 }
 
 pub const BasicSprite = struct {
-    pub fn new(canvas: ZigGame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32) ziggame.sprite.Sprite {
+    pub fn new(canvas: ziggame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32) ziggame.sprite.Sprite {
         return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(0, 0, 0) };
     }
 
@@ -33,7 +33,7 @@ pub const BasicSprite = struct {
 };
 
 pub const BouncingSprite = struct {
-    pub fn new(canvas: ZigGame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) ziggame.sprite.Sprite {
+    pub fn new(canvas: ziggame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) ziggame.sprite.Sprite {
         return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = init_ext(vel, dx, dy) };
     }
 

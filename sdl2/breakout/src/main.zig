@@ -123,7 +123,7 @@ const GameContext = struct {
     }
 };
 
-fn get_screen_center(gctx: *GameContext) ZigGame.Point {
+fn get_screen_center(gctx: *GameContext) ziggame.Point {
     var x = @divTrunc(gctx.zg.size.width_pixels, 2);
     var y = @divTrunc(gctx.zg.size.height_pixels, 2);
     return .{ .x = x, .y = y };

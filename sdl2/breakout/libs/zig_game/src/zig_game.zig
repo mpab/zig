@@ -32,14 +32,13 @@ fn _init() void {
     }
 }
 
+// import/export types
+pub const Canvas = _type.Canvas;
+pub const Point = _type.Point;
+pub const Rect = _type.Rect;
+pub const FontInfo = _type.FontInfo;
+
 pub const ZigGame = struct {
-
-    // import/export types
-    pub const Canvas = _type.Canvas;
-    pub const Point = _type.Point;
-    pub const Rect = _type.Rect;
-    pub const FontInfo = _type.FontInfo;
-
     window: sdl.Window,
     renderer: sdl.Renderer,
     surface: sdl.Surface,

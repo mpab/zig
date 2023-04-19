@@ -1,5 +1,6 @@
 const std = @import("std");
-const ZigGame = @import("zig_game.zig").ZigGame;
+const ziggame = @import("zig_game.zig");
+const ZigGame = ziggame.ZigGame;
 const sdl = @import("sdl-wrapper"); // configured in build.zig
 
 pub const ExtendedAttributes = struct {
@@ -19,7 +20,7 @@ pub const Sprite = struct {
     __v_draw: Draw,
 
     // attributes
-    canvas: ZigGame.Canvas,
+    canvas: ziggame.Canvas,
     bounds: sdl.Rectangle,
     x: i32,
     y: i32,
