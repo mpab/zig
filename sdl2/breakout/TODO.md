@@ -16,7 +16,10 @@
   - font selection (currently hard-coded)
   - implement transparency on textures
   - sound support (use SDL mixer?)
-  - implement a polymorphic sprite group container (hacky version)
+  - implement less hacky polymorphic sprites
+  - create Font object
+    - to hold and manage context information such as font size, render centering, etc
+    - should also contain a reference to the ZigGame context for rendering
 
 ## DONE
 
