@@ -72,6 +72,7 @@ const PLAYER_SCORE_IDX = 3;
 const GameContext = struct {
     zg: *ZigGame,
     level: u16 = 0,
+    difficulty_level: u16 = 0,
     lives: u64 = 0,
     scores: NameScores = NameScores.init(std.heap.page_allocator),
     player_score_edit_pos: usize = 0,
@@ -85,6 +86,7 @@ const GameContext = struct {
     text: ziggame.sprite.Group = .{}, // high scores
 
     ball_idx: usize = 0,
+    ball_start_y: i32 = 0,
     bat_idx: usize = 0,
     deadly_border_idx: usize = 0,
 
@@ -129,6 +131,12 @@ fn get_screen_center(gctx: *GameContext) ziggame.Point {
     return .{ .x = x, .y = y };
 }
 
+fn get_screen_center_top(gctx: *GameContext) ziggame.Point {
+    var x = @divTrunc(gctx.zg.size.width_pixels, 2);
+    var y = @divTrunc(gctx.zg.size.height_pixels, 8);
+    return .{ .x = x, .y = y };
+}
+
 // // event handlers
 fn change_game_state_if_mouse_button_up(gctx: *GameContext, new_state: GameState) void {
     if (gctx.input.ie_mouse_button_up.is_empty) {
@@ -157,8 +165,8 @@ fn reset_ball(gctx: *GameContext) void {
     var pos = get_screen_center(gctx);
     var ball = &gctx.playfield.list.items[gctx.ball_idx];
     ball.x = pos.x;
-    ball.y = pos.y;
-    ball.ext.vel = gctx.level + 3;
+    ball.y = gctx.ball_start_y;
+    ball.ext.vel = gctx.difficulty_level + 3;
     ball.ext.dx = 1;
     ball.ext.dy = 1;
 }
@@ -167,6 +175,7 @@ fn reset_ball(gctx: *GameContext) void {
 fn run_new_game(gctx: *GameContext) !void {
     gctx.lives = 3;
     gctx.level = 1;
+    gctx.difficulty_level = if (gctx.level > 10) 10 else gctx.level;
     var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
     player_ns.score = 0;
     player_ns.set_name("   ");
@@ -209,15 +218,17 @@ fn draw_level_lives_score(gctx: *GameContext) !void {
 }
 
 fn update_screen(gctx: *GameContext) void {
-    gctx.playfield.update();
     gctx.bricks.update();
+    if (gctx.game_state != GameState.LIFE_LOST) {
+        gctx.playfield.update();
+    }
     gctx.animations.update();
     gctx.text.update();
 }
 
 fn draw_screen(gctx: *GameContext) !void {
-    gctx.playfield.draw(gctx.zg);
     gctx.bricks.draw(gctx.zg);
+    gctx.playfield.draw(gctx.zg);
     gctx.animations.draw(gctx.zg);
     if (gctx.game_state == GameState.SHOW_HIGH_SCORES) {
         gctx.text.draw(gctx.zg);
@@ -528,8 +539,7 @@ fn replace_bricks(gctx: *GameContext) !void {
     // var canvas = try game.shape.brick(gctx.zg, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, 0);
     // try gctx.bricks.list.append(game.sprite.BasicSprite.new(canvas, bounds, 20, 200));
     var count: i32 = 0;
-
-    var bricks_y_offset: i32 = game.constant.BRICK_HEIGHT * (gctx.level + 5);
+    var bricks_y_offset: i32 = game.constant.BRICK_HEIGHT * (gctx.difficulty_level + 5);
     var r: i32 = 0;
     while (r != game.constant.NUM_BRICK_ROWS) : (r += 1) {
         var canvas = try game.shape.brick(gctx.zg, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, r);
@@ -537,11 +547,14 @@ fn replace_bricks(gctx: *GameContext) !void {
         while (c != game.constant.BRICKS_PER_ROW) : (c += 1) {
             var x = @intCast(i32, c * game.constant.BRICK_WIDTH);
             var y = bricks_y_offset + r * game.constant.BRICK_HEIGHT;
+            gctx.ball_start_y = y;
             var brick = game.sprite.BasicSprite.new(canvas, bounds, x, y);
             try gctx.bricks.list.append(brick);
             count += 1;
         }
     }
+
+    gctx.ball_start_y += game.constant.BRICK_HEIGHT;
 }
 
 pub fn main() !void {

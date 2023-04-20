@@ -14,7 +14,6 @@
   - fix zig sdl library hack
 - zig-game library
   - font selection (currently hard-coded)
-  - implement transparency on textures
   - sound support (use SDL mixer?)
   - implement less hacky polymorphic sprites
   - create Font object
@@ -32,12 +31,9 @@
   - ticker/state ticker
   - ticker/ball speedup ticker (ball speedup during level)
   - scoring
-  - sprite collisions (using intersecting rectangles)
-  - sprites
   - shape (texture) abstractions
   - mouse/bat movements
   - drawing: circle primitive
-  - fonts and text (using a bitmap font and pixel-plotting)
 - game (improved functionality)
   - brighten/darken colors using a saturate function
   - an extended rect type including top, bottom, etc. to better map to pygame
@@ -46,7 +42,12 @@
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)
   - links to libs/references other projects
-- sprite polymorphism (hacky version)
+- zig-game library
+  - transparency on textures
+  - sprite polymorphism (hacky version)
+  - fonts and text (using a bitmap font and pixel-plotting)
+  - sprite collisions (using intersecting rectangles)
+  - sprites
 - disappearing animation sprite for brick and score
 - text sprites (not using textures)
 - improved sprite velocity logic using {.vel .dx .dy}

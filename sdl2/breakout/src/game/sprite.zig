@@ -24,6 +24,7 @@ pub const BasicSprite = struct {
     fn v_draw(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
         var src_rect = sdl.Rectangle{ .x = 0, .y = 0, .width = self.canvas.width, .height = self.canvas.height };
         var dest_rect = sdl.Rectangle{ .x = self.x, .y = self.y, .width = self.canvas.width, .height = self.canvas.height };
+        //zg.renderer.setDrawBlendMode(sdl.BlendMode.blend) catch return;
         zg.renderer.copy(self.canvas.texture, dest_rect, src_rect) catch return;
     }
 

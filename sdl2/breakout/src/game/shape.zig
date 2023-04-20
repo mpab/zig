@@ -19,6 +19,20 @@ pub fn filled_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !zigg
     return canvas;
 }
 
+pub fn transparent_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !ziggame.Canvas {
+    var canvas = try create_canvas(zg, width, height);
+    try canvas.texture.setBlendMode(sdl.BlendMode.blend);
+    var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
+    const r = zg.renderer;
+    try r.setTarget(canvas.texture);
+    var fill_t = fill;
+    fill_t.a = 0;
+    try r.setColor(fill_t);
+    try r.fillRect(rect);
+    zg.reset_render_target();
+    return canvas;
+}
+
 fn resize(rect: sdl.Rectangle, by: i32) sdl.Rectangle {
     return sdl.Rectangle{ .x = rect.x - by, .y = rect.y - by, .width = rect.width + 2 * by, .height = rect.height + 2 * by };
 }
@@ -144,7 +158,7 @@ pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
 
 pub fn ball(zg: *ZigGame, radius: i32) !ziggame.Canvas {
     var radiusx2: i32 = radius * 2;
-    var canvas = try filled_rect(zg, radiusx2, radiusx2, color.SCREEN_COLOR);
+    var canvas = try transparent_rect(zg, radiusx2, radiusx2, color.SCREEN_COLOR);
     const r = zg.renderer;
     try r.setTarget(canvas.texture);
     try r.setColor(color.BALL_BORDER_COLOR);
