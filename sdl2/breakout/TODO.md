@@ -8,7 +8,7 @@
   - sounds
 - game (improved functionality)
   - gradient font rendering
-  - drawing: more primitives (filled circle, rectangle with rounded edges, ...)
+  - drawing: more primitives (rectangle with rounded edges, ...)
 - improve sprite velocity logic using polar coordinates
 - installation and setup
   - fix zig sdl library hack
@@ -38,6 +38,7 @@
 - game (improved functionality)
   - brighten/darken colors using a saturate function
   - an extended rect type including top, bottom, etc. to better map to pygame
+  - drawing: more primitives (filled circle)
 - installation and setup
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)

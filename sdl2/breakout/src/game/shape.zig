@@ -23,6 +23,62 @@ fn resize(rect: sdl.Rectangle, by: i32) sdl.Rectangle {
     return sdl.Rectangle{ .x = rect.x - by, .y = rect.y - by, .width = rect.width + 2 * by, .height = rect.height + 2 * by };
 }
 
+pub fn filled_circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
+    var d_e: i32 = 3;
+    var d_se = -2 * radius + 5;
+
+    var cx: i32 = 0;
+    var cy = radius;
+    var df = 1 - radius;
+
+    var ymcy = ycc - cy;
+    var ypcy = ycc + cy;
+    var xmcy = xcc - cy;
+    var xpcy = xcc + cy;
+
+    try renderer.drawLine(xmcy, ycc, xpcy, ycc); // fill center horizontal
+
+    if (df < 0) {
+        df = df + d_e;
+        d_e = d_e + 2;
+        d_se = d_se + 2;
+    } else {
+        df = df + d_se;
+        d_e = d_e + 2;
+        d_se = d_se + 4;
+        cy = cy - 1;
+    }
+    cx = cx + 1;
+
+    while (cy >= cx) {
+        ypcy = ycc + cy;
+        ymcy = ycc - cy;
+        var xpcx = xcc + cx;
+        var xmcx = xcc - cx;
+        try renderer.drawLine(xmcx, ymcy, xpcx - 1, ymcy); // top
+        try renderer.drawLine(xmcx - 1, ypcy - 1, xpcx, ypcy - 1); // bottom
+
+        xpcy = xcc + cy;
+        xmcy = xcc - cy;
+        var ypcx = ycc + cx;
+        var ymcx = ycc - cx;
+        try renderer.drawLine(xmcy, ymcx, xpcy - 1, ymcx); // top mid
+        try renderer.drawLine(xmcy, ypcx, xpcy - 1, ypcx); // bottom mid
+        // Update
+        if (df < 0) {
+            df = df + d_e;
+            d_e = d_e + 2;
+            d_se = d_se + 2;
+        } else {
+            df = df + d_se;
+            d_e = d_e + 2;
+            d_se = d_se + 4;
+            cy = cy - 1;
+        }
+        cx = cx + 1;
+    }
+}
+
 pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
     var d_e: i32 = 3;
     var d_se = -2 * radius + 5;
@@ -31,33 +87,46 @@ pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
     var cy = radius;
     var df = 1 - radius;
 
+    var ymcy = ycc - cy;
+    var ypcy = ycc + cy;
+    var xmcy = xcc - cy;
+    var xpcy = xcc + cy;
+    try renderer.drawPoint(xcc, ymcy); // top mid
+    try renderer.drawPoint(xcc, ypcy - 1); // bottom mid
+    try renderer.drawPoint(xmcy, ycc); // left mid
+    try renderer.drawPoint(xpcy - 1, ycc); // right mid
+
+    if (df < 0) {
+        df = df + d_e;
+        d_e = d_e + 2;
+        d_se = d_se + 2;
+    } else {
+        df = df + d_se;
+        d_e = d_e + 2;
+        d_se = d_se + 4;
+        cy = cy - 1;
+    }
+    cx = cx + 1;
+
     while (cy >= cx) {
-        var ypcy = ycc + cy;
-        var ymcy = ycc - cy;
-        if (cx > 0) {
-            var xpcx = xcc + cx;
-            var xmcx = xcc - cx;
-            try renderer.drawPoint(xmcx, ypcy);
-            try renderer.drawPoint(xpcx, ypcy);
-            try renderer.drawPoint(xmcx, ymcy);
-            try renderer.drawPoint(xpcx, ymcy);
-        } else {
-            try renderer.drawPoint(xcc, ymcy);
-            try renderer.drawPoint(xcc, ypcy);
-        }
-        var xpcy = xcc + cy;
-        var xmcy = xcc - cy;
-        if ((cx > 0) and (cx != cy)) {
-            var ypcx = ycc + cx;
-            var ymcx = ycc - cx;
-            try renderer.drawPoint(xmcy, ypcx);
-            try renderer.drawPoint(xpcy, ypcx);
-            try renderer.drawPoint(xmcy, ymcx);
-            try renderer.drawPoint(xpcy, ymcx);
-        } else if (cx == 0) {
-            try renderer.drawPoint(xmcy, ycc);
-            try renderer.drawPoint(xpcy, ycc);
-        }
+        ypcy = ycc + cy;
+        ymcy = ycc - cy;
+        var xpcx = xcc + cx;
+        var xmcx = xcc - cx;
+        try renderer.drawPoint(xmcx, ymcy); // top left
+        try renderer.drawPoint(xpcx - 1, ymcy); // top right
+        try renderer.drawPoint(xmcx, ypcy - 1); // bottom left
+        try renderer.drawPoint(xpcx - 1, ypcy - 1); // bottom right
+
+        xpcy = xcc + cy;
+        xmcy = xcc - cy;
+        var ypcx = ycc + cx;
+        var ymcx = ycc - cx;
+        try renderer.drawPoint(xmcy, ymcx); // center top left
+        try renderer.drawPoint(xpcy - 1, ymcx); // center bottom right
+        try renderer.drawPoint(xmcy, ypcx); // center bottom left
+        try renderer.drawPoint(xpcy - 1, ypcx); // center bottom right
+
         // Update
         if (df < 0) {
             df = df + d_e;
@@ -79,12 +148,9 @@ pub fn ball(zg: *ZigGame, radius: i32) !ziggame.Canvas {
     const r = zg.renderer;
     try r.setTarget(canvas.texture);
     try r.setColor(color.BALL_BORDER_COLOR);
-    try circle(zg.renderer, radius, radius, radius - 1);
+    try filled_circle(zg.renderer, radius, radius, radius);
     try r.setColor(color.BALL_FILL_COLOR);
-    try circle(zg.renderer, radius, radius, radius - 2);
-    try circle(zg.renderer, radius, radius, radius - 3);
-    try circle(zg.renderer, radius, radius, radius - 4);
-    try circle(zg.renderer, radius, radius, radius - 5);
+    try circle(zg.renderer, radius, radius, radius - 1);
     zg.reset_render_target();
     return canvas;
 }
