@@ -23,40 +23,6 @@ fn resize(rect: sdl.Rectangle, by: i32) sdl.Rectangle {
     return sdl.Rectangle{ .x = rect.x - by, .y = rect.y - by, .width = rect.width + 2 * by, .height = rect.height + 2 * by };
 }
 
-fn draw_circle(renderer: sdl.Renderer, cx: i32, cy: i32, radius: i32) !void {
-    const diameter = (radius * 2);
-
-    var x: i32 = (radius - 1);
-    var y: i32 = 0;
-    var tx: i32 = 1;
-    var ty: i32 = 1;
-    var err: i32 = tx - diameter;
-
-    while (x >= y) {
-        // Each of the following renders an octant of the circle
-        try renderer.drawPoint(cx + x, cy - y);
-        try renderer.drawPoint(cx + x, cy + y);
-        try renderer.drawPoint(cx - x, cy - y);
-        try renderer.drawPoint(cx - x, cy + y);
-        try renderer.drawPoint(cx + y, cy - x);
-        try renderer.drawPoint(cx + y, cy + x);
-        try renderer.drawPoint(cx - y, cy - x);
-        try renderer.drawPoint(cx - y, cy + x);
-
-        if (err <= 0) {
-            y = y - 1;
-            err += ty;
-            ty += 2;
-        }
-
-        if (err > 0) {
-            x = x - 1;
-            tx += 2;
-            err += (tx - diameter);
-        }
-    }
-}
-
 pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
     var d_e: i32 = 3;
     var d_se = -2 * radius + 5;
