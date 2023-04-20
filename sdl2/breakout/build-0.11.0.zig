@@ -13,10 +13,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const run_cmd = exe.run();
+    const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
+    exe.linkLibC();
+    b.installArtifact(exe);
 
     // C SDL
     const sdl_native_path = "./3rdparty/SDL2-devel-2.26.5-VC";
@@ -51,7 +53,4 @@ pub fn build(b: *std.Build) void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&exe_tests.step);
-
-    exe.linkLibC();
-    exe.install();
 }
