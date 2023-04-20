@@ -3,27 +3,20 @@ const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
 const color = @import("color.zig");
 
-pub const TextureRect = struct { texture: sdl.Texture, rect: sdl.Rectangle };
-
 pub fn create_canvas(zg: *ZigGame, width: i32, height: i32) !ziggame.Canvas {
     var texture = try sdl.createTexture(zg.renderer, zg.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
-    var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
-    return ziggame.Canvas.init(texture, rect.width, rect.height);
+    return ziggame.Canvas.init(texture, width, height);
 }
 
-fn colored_texture(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !TextureRect {
-    var texture = try sdl.createTexture(zg.renderer, zg.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
+pub fn filled_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !ziggame.Canvas {
+    var canvas = try create_canvas(zg, width, height);
     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
     const r = zg.renderer;
-    try r.setTarget(texture);
+    try r.setTarget(canvas.texture);
     try r.setColor(fill);
     try r.fillRect(rect);
-    return .{ .texture = texture, .rect = rect };
-}
-
-fn cleanup(zg: *ZigGame, tr: TextureRect) ziggame.Canvas {
     zg.reset_render_target();
-    return ziggame.Canvas.init(tr.texture, tr.rect.width, tr.rect.height);
+    return canvas;
 }
 
 fn resize(rect: sdl.Rectangle, by: i32) sdl.Rectangle {
@@ -116,8 +109,9 @@ pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
 
 pub fn ball(zg: *ZigGame, radius: i32) !ziggame.Canvas {
     var radiusx2: i32 = radius * 2;
-    var tr = try colored_texture(zg, radiusx2, radiusx2, color.SCREEN_COLOR);
+    var canvas = try filled_rect(zg, radiusx2, radiusx2, color.SCREEN_COLOR);
     const r = zg.renderer;
+    try r.setTarget(canvas.texture);
     try r.setColor(color.BALL_BORDER_COLOR);
     try circle(zg.renderer, radius, radius, radius - 1);
     try r.setColor(color.BALL_FILL_COLOR);
@@ -125,8 +119,8 @@ pub fn ball(zg: *ZigGame, radius: i32) !ziggame.Canvas {
     try circle(zg.renderer, radius, radius, radius - 3);
     try circle(zg.renderer, radius, radius, radius - 4);
     try circle(zg.renderer, radius, radius, radius - 5);
-
-    return cleanup(zg, tr);
+    zg.reset_render_target();
+    return canvas;
 }
 
 pub fn brick(zg: *ZigGame, width: i32, height: i32, row: i32) !ziggame.Canvas {
@@ -142,9 +136,10 @@ pub fn brick(zg: *ZigGame, width: i32, height: i32, row: i32) !ziggame.Canvas {
         else => unreachable,
     }
 
-    var tr = try colored_texture(zg, width, height, fill_color);
+    var canvas = try filled_rect(zg, width, height, fill_color);
 
     const r = zg.renderer;
+    try r.setTarget(canvas.texture);
     try r.setColor(ziggame.color.saturate(fill_color, -64));
     try r.drawLine(0, height - 1, width, height - 1);
     try r.drawLine(width - 1, 0, width - 1, height);
@@ -152,48 +147,73 @@ pub fn brick(zg: *ZigGame, width: i32, height: i32, row: i32) !ziggame.Canvas {
     try r.setColor(ziggame.color.saturate(fill_color, 64));
     try r.drawLine(0, 0, width, 0);
     try r.drawLine(0, 0, 0, height);
-
-    return cleanup(zg, tr);
+    zg.reset_render_target();
+    return canvas;
 }
+
+// pub fn bat(zg: *ZigGame) !ziggame.Canvas {
+//     var canvas = try filled_rect(zg, 80, 16, color.BAT_BORDER_COLOR);
+//     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = canvas.width, .height = canvas.height };
+//     const r = zg.renderer;
+//     var inner = resize(rect, -1);
+//     try r.setColor(color.BAT_FILL_COLOR);
+//     try r.setTarget(canvas.texture);
+//     try r.fillRect(inner);
+//     zg.reset_render_target();
+//     return canvas;
+// }
 
 pub fn bat(zg: *ZigGame) !ziggame.Canvas {
-    var tr = try colored_texture(zg, 80, 16, color.SCREEN_COLOR);
+    var canvas = try vertical_gradient_filled_canvas(zg, 80, 16, color.green, color.SCREEN_COLOR);
+    return canvas;
+}
+
+pub fn vertical_gradient_filled_canvas(zg: *ZigGame, width: i32, height: i32, start: sdl.Color, end: sdl.Color) !ziggame.Canvas {
+    // Draws a vertical linear gradient filling the entire surface. Returns a
+    // surface filled with the gradient (numeric is only 2-3 times faster).
+
+    var canvas = try create_canvas(zg, width, height);
 
     const r = zg.renderer;
-    try r.setColor(color.BAT_BORDER_COLOR);
-    try r.fillRect(tr.rect);
+    try r.setTarget(canvas.texture);
 
-    var inner = resize(tr.rect, -1);
-    try r.setColor(color.BAT_FILL_COLOR);
-    try r.fillRect(inner);
+    var dd = 1.0 / @intToFloat(f32, height);
 
-    return cleanup(zg, tr);
+    var sr: f32 = @intToFloat(f32, start.r);
+    var sg: f32 = @intToFloat(f32, start.g);
+    var sb: f32 = @intToFloat(f32, start.b);
+    var sa: f32 = @intToFloat(f32, start.a);
+
+    var er: f32 = @intToFloat(f32, end.r);
+    var eg: f32 = @intToFloat(f32, end.g);
+    var eb: f32 = @intToFloat(f32, end.b);
+    var ea: f32 = @intToFloat(f32, end.a);
+
+    //surface = pygame.Surface((1, height)).convert_alpha()
+
+    var rm = (er - sr) * dd;
+    var gm = (eg - sg) * dd;
+    var bm = (eb - sb) * dd;
+    var am = (ea - sa) * dd;
+
+    var y: i32 = 0;
+    while (y != height) : (y += 1) {
+        var fy = @intToFloat(f32, y);
+        var fgr = sr + rm * fy;
+        var fgg = sg + gm * fy;
+        var fgb = sb + bm * fy;
+        var fga = sa + am * fy;
+
+        var gcolor = sdl.Color.rgba(
+            @floatToInt(u8, fgr),
+            @floatToInt(u8, fgg),
+            @floatToInt(u8, fgb),
+            @floatToInt(u8, fga),
+        );
+
+        try r.setColor(gcolor);
+        try r.drawLine(0, y, width, y);
+    }
+    zg.reset_render_target();
+    return canvas;
 }
-
-pub fn filled_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !ziggame.Canvas {
-    var tr = try colored_texture(zg, width, height, fill);
-    return cleanup(zg, tr);
-}
-
-// pub fn vertical_gradient_filled_canvas(size, startcolor, endcolor) !ziggame.Canvas{
-//     """
-//     Draws a vertical linear gradient filling the entire surface. Returns a
-//     surface filled with the gradient (numeric is only 2-3 times faster).
-//     """
-//     height = size[1]
-//     surface = pygame.Surface((1, height)).convert_alpha()
-//     dd = 1.0/height
-//     sr, sg, sb, sa = startcolor
-//     er, eg, eb, ea = endcolor
-//     rm = (er-sr)*dd
-//     gm = (eg-sg)*dd
-//     bm = (eb-sb)*dd
-//     am = (ea-sa)*dd
-//     for y in range(height):
-//         surface.set_at((0, y),
-//                        (int(sr + rm*y),
-//                         int(sg + gm*y),
-//                         int(sb + bm*y),
-//                         int(sa + am*y))
-//                        )
-//     return cleanup(zg, tr);
