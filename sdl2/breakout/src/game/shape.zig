@@ -169,8 +169,7 @@ pub fn bat(zg: *ZigGame) !ziggame.Canvas {
 }
 
 pub fn vertical_gradient_filled_canvas(zg: *ZigGame, width: i32, height: i32, start: sdl.Color, end: sdl.Color) !ziggame.Canvas {
-    // Draws a vertical linear gradient filling the entire surface. Returns a
-    // surface filled with the gradient (numeric is only 2-3 times faster).
+    // Returns a canvas containing a texture with a vertical linear gradient filling the entire texture
 
     var canvas = try create_canvas(zg, width, height);
 

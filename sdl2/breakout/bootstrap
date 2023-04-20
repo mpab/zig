@@ -15,13 +15,13 @@ export SDLVER='2.26.5'
 export CSDLVER="SDL2-$SDLVER"
 export CSDLDEVVC="SDL2-devel-$SDLVER-VC"
 export CSDLVC="SDL2-$SDLVER-VC"
-rm -rf "$CSDLVC"
+rm -rf "$CSDLDEVVC"
 curl -L "https://github.com/libsdl-org/SDL/releases/download/release-2.26.5/$CSDLDEVVC.zip" -o "$CSDLVER.zip"
 unzip -x "$CSDLVER.zip"
 mv "$CSDLVER" "$CSDLDEVVC"
 rm "$CSDLVER.zip"
 
 # hack patch for zig sdl
-export ZIGPATCFILEPATH="./$ZIGSDL/src/wrapper/sdl.zig"
-sed -i 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n});/g' $ZIGPATCFILEPATH
-echo patched $ZIGPATCFILEPATH
+export ZIGPATCHFILEPATH="./$ZIGSDL/src/wrapper/sdl.zig"
+sed -i 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n});/g' $ZIGPATCHFILEPATH
+echo patched $ZIGPATCHFILEPATH
