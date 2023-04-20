@@ -25,6 +25,13 @@ pub fn build(b: *std.build.Builder) void {
     b.installBinFile(sdl_native_path ++ "/lib/x64" ++ "/SDL2.dll", "SDL2.dll");
     exe.linkSystemLibrary("sdl2");
 
+    const sdl_mixer_native_path = "./3rdparty/SDL2_mixer-devel-2.6.3-VC";
+    const sdl_mixer_native_include_path = sdl_native_path ++ "/include";
+    exe.addIncludePath(sdl_mixer_native_include_path);
+    exe.addLibraryPath(sdl_mixer_native_path ++ "/lib/x64");
+    b.installBinFile(sdl_mixer_native_path ++ "/lib/x64" ++ "/SDL2_mixer.dll", "SDL2_mixer.dll");
+    exe.linkSystemLibrary("sdl2_mixer");
+
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());
     if (b.args) |args| {
