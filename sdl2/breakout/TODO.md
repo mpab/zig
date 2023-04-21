@@ -14,7 +14,7 @@
   - fix zig sdl library hack
 - zig-game library
   - font selection (currently hard-coded)
-  - sound support (use SDL mixer?)
+  - improved sound support
   - implement less hacky polymorphic sprites
   - create Font object
     - to hold and manage context information such as font size, render centering, etc
@@ -50,6 +50,7 @@
   - fonts and text (using a bitmap font and pixel-plotting)
   - sprite collisions (using intersecting rectangles)
   - sprites
+  - basic sound support using SDL mixer
 - disappearing animation sprite for brick and score
 - text sprites (not using textures)
 - improved sprite velocity logic using {.vel .dx .dy}

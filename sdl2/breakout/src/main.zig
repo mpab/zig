@@ -143,6 +143,7 @@ fn change_game_state_if_mouse_button_up(gctx: *GameContext, new_state: GameState
         return;
     }
     set_game_state(gctx, new_state); // state
+    game.mixer.play(game.mixer.mouse_press) catch return;
 }
 
 fn process_mouse_motion(gctx: *GameContext) void {

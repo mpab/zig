@@ -19,12 +19,18 @@ pub fn build(b: *std.build.Builder) void {
     exe.install();
 
     const vcpkg_root = "./vcpkg_installed/x64-windows";
-
-    const sdl_native_include_path = vcpkg_root ++ "/include/SDL2";
-    exe.addIncludePath(sdl_native_include_path);
+    exe.addIncludePath(vcpkg_root ++ "/include/SDL2");
     exe.addLibraryPath(vcpkg_root ++ "/lib");
-    b.installBinFile(vcpkg_root ++ "/bin/SDL2.dll", "SDL2.dll");
-    exe.linkSystemLibrary("SDL2");
+    var bin_path = vcpkg_root ++ "/bin";
+    installBinFiles(b, bin_path, &.{
+        "SDL2.dll",
+        "SDL2_mixer.dll",
+        "ogg.dll",
+        "vorbis.dll",
+        "vorbisfile.dll",
+    });
+    exe.linkSystemLibrary("sdl2");
+    exe.linkSystemLibrary("sdl2_mixer");
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());
@@ -62,4 +68,10 @@ pub fn build(b: *std.build.Builder) void {
 
     exe.linkLibC();
     exe.install();
+}
+
+fn installBinFiles(b: *std.build.Builder, path: []const u8, files: []const []const u8) void {
+    for (files) |file| {
+        b.installBinFile(b.pathJoin(&.{ path, file }), file);
+    }
 }

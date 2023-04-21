@@ -17,8 +17,6 @@ pub const time = @import("time.zig");
 pub const color = @import("color.zig");
 const _type = @import("_type.zig");
 
-pub const mixer = @import("mixer.zig");
-
 pub fn panic() noreturn {
     const str = @as(?[*:0]const u8, c_sdl.SDL_GetError()) orelse "unknown error";
     @panic(std.mem.sliceTo(str, 0));
