@@ -42,7 +42,7 @@ const InputEvent = struct {
 
 const InputEvents = struct {
     ie_mouse_motion: InputEvent = .{},
-    ie_mouse_button_up: InputEvent = .{},
+    ie_mouse_button_down: InputEvent = .{},
     ie_key_down: InputEvent = .{},
 };
 
@@ -66,11 +66,50 @@ const NameScore = struct {
     }
 };
 
+// ============================================================================
+// Temporary hack for bounce sounds until sprite polymorphism is improved
+//-----------------------------------------------------------------------------
+fn ball_v_update(gctx: *GameContext) void {
+    var self = &gctx.playfield.list.items[gctx.ball_idx];
+
+    self.x += self.ext.dx * self.ext.vel;
+    self.y += self.ext.dy * self.ext.vel;
+
+    var sr = game.sprite.from_sprite(self);
+    var bounds = game.sprite.from_sdl_rect(self.bounds);
+
+    if (sr.left < bounds.left) {
+        self.ext.dx = -self.ext.dx;
+        sr.left = bounds.left;
+        gctx.mixer.ball_wall.play();
+    }
+    if (sr.right > bounds.right) {
+        self.ext.dx = -self.ext.dx;
+        sr.left = bounds.right - self.canvas.width;
+        gctx.mixer.ball_wall.play();
+    }
+    if (sr.top < bounds.top) {
+        self.ext.dy = -self.ext.dy;
+        sr.top = bounds.top;
+        gctx.mixer.ball_wall.play();
+    }
+    if (sr.bottom > bounds.bottom) {
+        self.ext.dy = -self.ext.dy;
+        sr.top = bounds.bottom - self.canvas.height;
+        gctx.mixer.ball_wall.play();
+    }
+
+    self.x = sr.left;
+    self.y = sr.top;
+}
+//-----------------------------------------------------------------------------
+
 pub const NameScores = std.ArrayList(NameScore);
 const PLAYER_SCORE_IDX = 3;
 
 const GameContext = struct {
     zg: *ZigGame,
+    mixer: *game.mixer.Mixer,
     level: u16 = 0,
     difficulty_level: u16 = 0,
     lives: u64 = 0,
@@ -92,9 +131,10 @@ const GameContext = struct {
 
     input: InputEvents = .{},
 
-    pub fn configure(zg: *ZigGame) !GameContext {
+    pub fn configure(zg: *ZigGame, mixer: *game.mixer.Mixer) !GameContext {
         var gctx: GameContext = .{
             .zg = zg,
+            .mixer = mixer,
             .bounds = sdl.Rectangle{ .x = 0, .y = 0, .width = zg.size.width_pixels, .height = zg.size.height_pixels },
             .game_state_ticker = game.time.Ticker.init(),
             .bat_ball_debounce_ticker = game.time.Ticker.init(),
@@ -118,7 +158,7 @@ const GameContext = struct {
         try gctx.scores.append(NameScore.init("AAA", 1000));
         try gctx.scores.append(NameScore.init("BBB", 100));
         try gctx.scores.append(NameScore.init("CCC", 10));
-        try gctx.scores.append(NameScore.init("   ", 70)); // current score, 70 is for testing
+        try gctx.scores.append(NameScore.init("   ", 0));
         try replace_high_scores(&gctx);
 
         return gctx;
@@ -139,11 +179,11 @@ fn get_screen_center_top(gctx: *GameContext) ziggame.Point {
 
 // // event handlers
 fn change_game_state_if_mouse_button_up(gctx: *GameContext, new_state: GameState) void {
-    if (gctx.input.ie_mouse_button_up.is_empty) {
+    if (gctx.input.ie_mouse_button_down.is_empty) {
         return;
     }
     set_game_state(gctx, new_state); // state
-    game.mixer.play(game.mixer.mouse_press) catch return;
+    gctx.mixer.mouse_press.play();
 }
 
 fn process_mouse_motion(gctx: *GameContext) void {
@@ -220,8 +260,8 @@ fn draw_level_lives_score(gctx: *GameContext) !void {
 
 fn update_screen(gctx: *GameContext) void {
     gctx.bricks.update();
-    if (gctx.game_state != GameState.LIFE_LOST) {
-        gctx.playfield.update();
+    if (!((gctx.game_state == GameState.LIFE_LOST) or (gctx.game_state == GameState.LEVEL_COMPLETE))) {
+        ball_v_update(gctx);
     }
     gctx.animations.update();
     gctx.text.update();
@@ -245,6 +285,7 @@ fn handle_ball_bat_collision(gctx: *GameContext) void {
     gctx.bat_ball_debounce_ticker.reset();
     var ball = &gctx.playfield.list.items[gctx.ball_idx];
     ball.ext.dy = -ball.ext.dy;
+    gctx.mixer.ball_bat.play();
 }
 
 fn run_game(gctx: *GameContext) !void {
@@ -268,9 +309,11 @@ fn run_game(gctx: *GameContext) !void {
         ball.ext.dy = -ball.ext.dy;
         var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
         player_ns.score += 10;
+        gctx.mixer.ball_brick.play();
 
         if (gctx.bricks.list.items.len == 0) {
             set_game_state(gctx, GameState.LEVEL_COMPLETE);
+            gctx.mixer.level_complete.play();
         }
     }
 
@@ -282,6 +325,7 @@ fn run_game(gctx: *GameContext) !void {
     // handle deadly border/ball collision
     if (ziggame.sprite.collide_rect(ball, deadly_border)) {
         set_game_state(gctx, GameState.LIFE_LOST);
+        gctx.mixer.life_lost.play();
     }
 
     if (gctx.game_state_ticker.counter_ms > 20000) { // speed up the ball
@@ -304,15 +348,23 @@ fn run_life_lost(gctx: *GameContext) !void {
         gctx.lives -= 1;
         if (gctx.lives > 0) {
             set_game_state(gctx, GameState.GET_READY);
+            gctx.mixer.get_ready.play();
         } else {
-            set_game_state(gctx, GameState.GAME_OVER);
             var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
             var idx: usize = 0;
+            var high_score = false;
             for (gctx.scores.items) |ns| {
                 if ((idx < PLAYER_SCORE_IDX) and player_ns.score > ns.score) {
-                    set_game_state(gctx, GameState.GAME_OVER_HIGH_SCORE);
+                    high_score = true;
                 }
                 idx += 1;
+            }
+            if (high_score) {
+                set_game_state(gctx, GameState.GAME_OVER_HIGH_SCORE);
+                gctx.mixer.high_score.play();
+            } else {
+                set_game_state(gctx, GameState.GAME_OVER);
+                gctx.mixer.game_over.play();
             }
         }
     }
@@ -364,6 +416,7 @@ fn run_game_over_high_score(gctx: *GameContext) !void {
 fn run_next_level(gctx: *GameContext) !void {
     gctx.level += 1;
     set_game_state(gctx, GameState.GET_READY);
+    gctx.mixer.get_ready.play();
     try replace_bricks(gctx);
 }
 
@@ -398,6 +451,9 @@ fn run_enter_high_score(gctx: *GameContext) !void {
 
     // TODO: handle shift modifier
     if (!gctx.input.ie_key_down.is_empty) { // handle keypresses
+
+        gctx.mixer.key_press.play();
+
         //gctx.input.ie_key_down.ve.event.key_down.
         var key = gctx.input.ie_key_down.val.event.key_down;
         var scancode = key.scancode;
@@ -452,8 +508,8 @@ fn run_game_state(gctx: *GameContext) !bool {
             .mouse_motion => {
                 gctx.input.ie_mouse_motion = InputEvent.init(event);
             },
-            .mouse_button_up => {
-                gctx.input.ie_mouse_button_up = InputEvent.init(event);
+            .mouse_button_down => {
+                gctx.input.ie_mouse_button_down = InputEvent.init(event);
             },
             .key_down => {
                 gctx.input.ie_key_down = InputEvent.init(event);
@@ -536,9 +592,9 @@ fn replace_high_scores(gctx: *GameContext) !void {
 fn replace_bricks(gctx: *GameContext) !void {
     gctx.bricks.list.clearAndFree();
     var bounds = gctx.bounds;
-    // testing
+    //testing
     // var canvas = try game.shape.brick(gctx.zg, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, 0);
-    // try gctx.bricks.list.append(game.sprite.BasicSprite.new(canvas, bounds, 20, 200));
+    // try gctx.bricks.list.append(game.sprite.BasicSprite.new(canvas, bounds, 350, 200));
     var count: i32 = 0;
     var bricks_y_offset: i32 = game.constant.BRICK_HEIGHT * (gctx.difficulty_level + 5);
     var r: i32 = 0;
@@ -560,7 +616,8 @@ fn replace_bricks(gctx: *GameContext) !void {
 
 pub fn main() !void {
     var zgContext = try ZigGame.init("breakout", game.constant.SCREEN_WIDTH, game.constant.SCREEN_HEIGHT);
-    var gctx = try GameContext.configure(&zgContext);
+    var mixer = try game.mixer.Mixer.init();
+    var gctx = try GameContext.configure(&zgContext, &mixer);
 
     //set_game_state(&gctx, GameState.ENTER_HIGH_SCORE);
     reset_ball(&gctx);

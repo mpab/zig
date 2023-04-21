@@ -14,7 +14,6 @@
   - fix zig sdl library hack
 - zig-game library
   - font selection (currently hard-coded)
-  - improved sound support
   - implement less hacky polymorphic sprites
   - create Font object
     - to hold and manage context information such as font size, render centering, etc
@@ -38,6 +37,7 @@
   - brighten/darken colors using a saturate function
   - an extended rect type including top, bottom, etc. to better map to pygame
   - drawing: more primitives (filled circle)
+  - sound support using SDL mixer
 - installation and setup
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)
@@ -50,7 +50,7 @@
   - fonts and text (using a bitmap font and pixel-plotting)
   - sprite collisions (using intersecting rectangles)
   - sprites
-  - basic sound support using SDL mixer
+  - mixer: refactor code to split library and game functionality
 - disappearing animation sprite for brick and score
 - text sprites (not using textures)
 - improved sprite velocity logic using {.vel .dx .dy}
