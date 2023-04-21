@@ -22,5 +22,9 @@ zig-out/
 
 # local 3rd-party libs
 3rdparty/
+vcpkg_installed/
+
+ # source libs
+deps/
 
 scrap/

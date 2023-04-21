@@ -42,6 +42,8 @@
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)
   - links to libs/references other projects
+  - now uses vcpkg for pulling down SDL dependencies
+  - now uses git for pulling down SDL.zig
 - zig-game library
   - transparency on textures
   - sprite polymorphism (hacky version)

@@ -1,19 +1,16 @@
 #!/usr/bin/env sh
 
-mkdir -p ./3rdparty
-cd ./3rdparty
+vcpkg install
 
-export ZIGSDL='SDL.zig'
+export ZIGSDL='./deps/SDL.zig'
+export ZIGPATCHFILEPATH="$ZIGSDL/src/wrapper/sdl.zig"
 
 if [ ! -e "$ZIGSDL" ]; then
-  rm -rf "$ZIGSDL"
-  curl -L "https://github.com/MasterQ32/$ZIGSDL/archive/refs/heads/master.zip" -o "$ZIGSDL.zip"
-  unzip -x "$ZIGSDL.zip"
-  mv "$ZIGSDL-master" "$ZIGSDL"
-  rm -rf "$ZIGSDL.zip"
+  mkdir -p ./deps
+  cd ./deps
+  git clone https://github.com/MasterQ32/SDL.zig.git
+  cd ..
 
-  # hack patch for zig sdl
-  export ZIGPATCHFILEPATH="./$ZIGSDL/src/wrapper/sdl.zig"
   if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n});/g' $ZIGPATCHFILEPATH
   else
@@ -21,33 +18,5 @@ if [ ! -e "$ZIGSDL" ]; then
   fi
   echo patched $ZIGPATCHFILEPATH
 else
-  echo "$ZIGSDL exists" 
-fi
-
-export SDLPROJ='SDL2'
-export SDLVER='2.26.5'
-export SDLDIR="$SDLPROJ-devel-$SDLVER-VC"
-export SDLZIP="$SDLDIR.zip"
-if [ ! -e "$SDLDIR" ]; then
-  curl -L "https://github.com/libsdl-org/SDL/releases/download/release-$SDLVER/$SDLZIP" -o "$SDLZIP"
-  unzip -x "$SDLZIP"
-  rm "$SDLZIP"
-  rm -rf "$SDLDIR"
-  mv "$SDLPROJ-$SDLVER" "$SDLDIR"
-else
-  echo "$SDLDIR exists" 
-fi
-
-export SDLMIXPROJ='SDL2_mixer'
-export SDLMIXVER='2.6.3'
-export SDLMIXDIR="$SDLMIXPROJ-devel-$SDLMIXVER-VC"
-export SDLMIXZIP="$SDLMIXDIR.zip"
-if [ ! -e "$SDLMIXDIR" ]; then
-  curl -L "https://github.com/libsdl-org/SDL_mixer/releases/download/release-$SDLMIXVER/$SDLMIXZIP" -o "$SDLMIXZIP"
-  unzip -x "$SDLMIXZIP"
-  rm "$SDLMIXZIP"
-  rm -rf "$SDLMIXDIR"
-  mv "$SDLMIXPROJ-$SDLMIXVER" "$SDLMIXDIR"
-else
-  echo "$SDLMIXDIR exists" 
+  echo "$ZIGSDL exists, not patching $ZIGPATCHFILEPATH" 
 fi
