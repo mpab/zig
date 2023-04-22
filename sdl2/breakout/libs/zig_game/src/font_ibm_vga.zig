@@ -12,7 +12,6 @@ pub fn bitmap(letter: u8) u64 {
 pub fn draw(zg: *ZigGame, letter: u8, pos: _type.Point, scaling: u8) !void {
     var plot_x: i32 = pos.x;
     var plot_y: i32 = pos.y + info.height * scaling - 1; // -1 fudge factor...
-    try zg.renderer.setColorRGB(255, 255, 255);
     var long_long = bitmap(letter);
     var bit: u64 = 0x0000000000000001;
     for (range(info.height)) |_| {

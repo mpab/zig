@@ -139,7 +139,7 @@ pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
 
 pub fn ball(zg: *ZigGame, radius: i32) !ziggame.Canvas {
     var radiusx2: i32 = radius * 2;
-    var canvas = try zg.create_transparent_canvas(radiusx2, radiusx2, color.SCREEN_COLOR);
+    var canvas = try zg.create_transparent_canvas(radiusx2, radiusx2, sdl.Color.rgba(0, 0, 0, 0));
     const r = zg.renderer;
     try r.setTarget(canvas.texture);
     try r.setColor(color.BALL_BORDER_COLOR);
@@ -191,55 +191,6 @@ pub fn brick(zg: *ZigGame, width: i32, height: i32, row: i32) !ziggame.Canvas {
 // }
 
 pub fn bat(zg: *ZigGame) !ziggame.Canvas {
-    var canvas = try vertical_gradient_filled_canvas(zg, 80, 16, color.green, color.SCREEN_COLOR);
-    return canvas;
-}
-
-pub fn vertical_gradient_filled_canvas(zg: *ZigGame, width: i32, height: i32, start: sdl.Color, end: sdl.Color) !ziggame.Canvas {
-    // Returns a canvas containing a texture with a vertical linear gradient filling the entire texture
-
-    var canvas = try zg.create_canvas(width, height);
-
-    const r = zg.renderer;
-    try r.setTarget(canvas.texture);
-
-    var dd = 1.0 / @intToFloat(f32, height);
-
-    var sr: f32 = @intToFloat(f32, start.r);
-    var sg: f32 = @intToFloat(f32, start.g);
-    var sb: f32 = @intToFloat(f32, start.b);
-    var sa: f32 = @intToFloat(f32, start.a);
-
-    var er: f32 = @intToFloat(f32, end.r);
-    var eg: f32 = @intToFloat(f32, end.g);
-    var eb: f32 = @intToFloat(f32, end.b);
-    var ea: f32 = @intToFloat(f32, end.a);
-
-    //surface = pygame.Surface((1, height)).convert_alpha()
-
-    var rm = (er - sr) * dd;
-    var gm = (eg - sg) * dd;
-    var bm = (eb - sb) * dd;
-    var am = (ea - sa) * dd;
-
-    var y: i32 = 0;
-    while (y != height) : (y += 1) {
-        var fy = @intToFloat(f32, y);
-        var fgr = sr + rm * fy;
-        var fgg = sg + gm * fy;
-        var fgb = sb + bm * fy;
-        var fga = sa + am * fy;
-
-        var gcolor = sdl.Color.rgba(
-            @floatToInt(u8, fgr),
-            @floatToInt(u8, fgg),
-            @floatToInt(u8, fgb),
-            @floatToInt(u8, fga),
-        );
-
-        try r.setColor(gcolor);
-        try r.drawLine(0, y, width, y);
-    }
-    zg.reset_render_target();
+    var canvas = try zg.vertical_gradient_filled_canvas(80, 16, color.green, color.SCREEN_COLOR);
     return canvas;
 }

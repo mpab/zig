@@ -19,7 +19,8 @@ pub fn draw_glyph(zg: *ZigGame, letter: u8, x: i32, y: i32, scaling: u8) !void {
     try font.draw(zg, letter, .{ .x = x, .y = y }, scaling);
 }
 
-pub fn render(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8) !void {
+pub fn render(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8, color: ziggame.sdl.Color) !void {
+    try zg.renderer.setColor(color);
     var dx: i32 = 0;
     for (text) |letter| {
         try draw_glyph(zg, letter, x + dx, y, scaling);
@@ -27,7 +28,8 @@ pub fn render(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8) !void
     }
 }
 
-pub fn render_centered(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8) !void {
+pub fn render_centered(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8, color: ziggame.sdl.Color) !void {
+    try zg.renderer.setColor(color);
     var center_x: i32 = x - @intCast(i32, (text.len * font.info.width * scaling) / 2);
     var center_y: i32 = y - (font.info.height * scaling) / 2;
     var dx: i32 = 0;
@@ -39,16 +41,15 @@ pub fn render_centered(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: 
 
 const dbg = std.log.debug;
 
-pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8) !_type.Canvas {
+// TODO: use color alpha to determine transparency
+pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
     var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
     var h: i32 = @intCast(i32, font.info.height * scaling);
-
-    var canvas = try zg.create_transparent_canvas(w, h, ziggame.sdl.Color.rgb(0, 0, 0));
-    // var canvas = try zg.create_canvas(w, h);
+    var canvas = if (color.a == 0) try zg.create_transparent_canvas(w, h, color) else try zg.create_canvas(w, h);
     try zg.renderer.setTarget(canvas.texture);
-    // var rect = ziggame.sdl.Rectangle{ .x = 0, .y = 0, .width = w, .height = h };
-    // try zg.renderer.setColor(ziggame.sdl.Color.rgb(255, 0, 0));
-    // try zg.renderer.fillRect(rect);
+    var solid_color = color;
+    solid_color.a = 255; // reset alpha otherwise text will be invisible
+    try zg.renderer.setColor(solid_color);
     var dx: i32 = 0;
     for (text) |letter| {
         try draw_glyph(zg, letter, dx, 0, scaling);
@@ -56,4 +57,27 @@ pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8) !_type.Ca
     }
     zg.reset_render_target();
     return canvas;
+}
+
+pub fn x_create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8) !_type.Canvas {
+    var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
+    var h: i32 = @intCast(i32, font.info.height * scaling);
+
+    var mask_canvas = try zg.create_transparent_canvas(w, h, ziggame.sdl.Color.rgb(255, 255, 255));
+    // try zg.renderer.setTarget(mask_canvas.texture);
+    // var dx: i32 = 0;
+    // for (text) |letter| {
+    //     try draw_glyph(zg, letter, dx, 0, scaling);
+    //     dx += font.info.width * scaling;
+    // }
+
+    // var rect = ziggame.sdl.Rectangle{ .x = 0, .y = 0, .width = mask_canvas.width, .height = mask_canvas.height };
+
+    // var gradient_canvas = try zg.vertical_gradient_filled_canvas(rect.width, rect.height, ziggame.sdl.Color.rgb(255, 0, 0), ziggame.sdl.Color.rgb(0, 0, 255));
+
+    // try zg.renderer.setTarget(gradient_canvas.texture);
+    // try zg.renderer.copy(mask_canvas.texture, rect, rect);
+
+    // zg.reset_render_target();
+    return mask_canvas;
 }

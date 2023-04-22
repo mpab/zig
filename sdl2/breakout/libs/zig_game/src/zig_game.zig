@@ -94,17 +94,65 @@ pub const ZigGame = struct {
         return Canvas.init(texture, width, height);
     }
 
+    // color alpha channel sets transparency level
     pub fn create_transparent_canvas(self: *ZigGame, width: i32, height: i32, fill: sdl.Color) !Canvas {
         var canvas = try self.create_canvas(width, height);
         try canvas.texture.setBlendMode(sdl.BlendMode.blend);
         var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
         const r = self.renderer;
         try r.setTarget(canvas.texture);
-        var fill_t = fill;
-        fill_t.a = 0;
-        try r.setColor(fill_t);
+        try r.setColor(fill);
         try r.fillRect(rect);
         self.reset_render_target();
+        return canvas;
+    }
+
+    pub fn vertical_gradient_filled_canvas(zg: *ZigGame, width: i32, height: i32, start: sdl.Color, end: sdl.Color) !Canvas {
+        // Returns a canvas containing a texture with a vertical linear gradient filling the entire texture
+
+        var canvas = try zg.create_canvas(width, height);
+
+        const r = zg.renderer;
+        try r.setTarget(canvas.texture);
+
+        var dd = 1.0 / @intToFloat(f32, height);
+
+        var sr: f32 = @intToFloat(f32, start.r);
+        var sg: f32 = @intToFloat(f32, start.g);
+        var sb: f32 = @intToFloat(f32, start.b);
+        var sa: f32 = @intToFloat(f32, start.a);
+
+        var er: f32 = @intToFloat(f32, end.r);
+        var eg: f32 = @intToFloat(f32, end.g);
+        var eb: f32 = @intToFloat(f32, end.b);
+        var ea: f32 = @intToFloat(f32, end.a);
+
+        //surface = pygame.Surface((1, height)).convert_alpha()
+
+        var rm = (er - sr) * dd;
+        var gm = (eg - sg) * dd;
+        var bm = (eb - sb) * dd;
+        var am = (ea - sa) * dd;
+
+        var y: i32 = 0;
+        while (y != height) : (y += 1) {
+            var fy = @intToFloat(f32, y);
+            var fgr = sr + rm * fy;
+            var fgg = sg + gm * fy;
+            var fgb = sb + bm * fy;
+            var fga = sa + am * fy;
+
+            var gcolor = sdl.Color.rgba(
+                @floatToInt(u8, fgr),
+                @floatToInt(u8, fgg),
+                @floatToInt(u8, fgb),
+                @floatToInt(u8, fga),
+            );
+
+            try r.setColor(gcolor);
+            try r.drawLine(0, y, width, y);
+        }
+        zg.reset_render_target();
         return canvas;
     }
 };

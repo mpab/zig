@@ -229,9 +229,9 @@ fn run_attract(gctx: *GameContext) !void {
     var point = get_screen_center(gctx);
 
     if (gctx.game_state_ticker.counter_ms <= 2000) {
-        try ziggame.font.render_centered(gctx.zg, "Press Mouse Button", point.x, point.y, 4);
+        try game.text.draw_centered(gctx.zg, "Press Mouse Button", point, 4);
     } else if ((2000 <= gctx.game_state_ticker.counter_ms) and (gctx.game_state_ticker.counter_ms <= 4000)) {
-        try ziggame.font.render_centered(gctx.zg, "To Start", point.x, point.y, 4);
+        try game.text.draw_centered(gctx.zg, "To Start", point, 4);
     } else {
         set_game_state(gctx, GameState.SHOW_HIGH_SCORES);
     }
@@ -254,7 +254,7 @@ fn draw_level_lives_score(gctx: *GameContext) !void {
         "Level: {d} Lives: {d} Score: {d}",
         .{ gctx.level, gctx.lives, player_ns.score },
     );
-    try ziggame.font.render(gctx.zg, string, 4, 4, 2);
+    try game.text.draw(gctx.zg, string, .{ .x = 4, .y = 4 }, 2);
     defer std.heap.page_allocator.free(string);
 }
 
@@ -340,9 +340,9 @@ fn run_life_lost(gctx: *GameContext) !void {
     if (gctx.game_state_ticker.counter_ms <= 2000) {
         var point = get_screen_center(gctx);
         if (gctx.lives == 1) {
-            try ziggame.font.render_centered(gctx.zg, "No Lives Left!", point.x, point.y, 4);
+            try game.text.draw_centered(gctx.zg, "No Lives Left!", point, 4);
         } else {
-            try ziggame.font.render_centered(gctx.zg, "You Lost a Life!", point.x, point.y, 4);
+            try game.text.draw_centered(gctx.zg, "You Lost a Life!", point, 4);
         }
     } else {
         gctx.lives -= 1;
@@ -379,7 +379,7 @@ fn run_get_ready(gctx: *GameContext) !void {
         var magnification: i32 = @intCast(i32, @divTrunc(gctx.game_state_ticker.counter_ms, 50));
         var size = if (magnification < 10) magnification else 20 - magnification;
         if (size > 0) {
-            try ziggame.font.render_centered(gctx.zg, "Get Ready!", point.x, point.y, @intCast(u8, size));
+            try game.text.draw_centered(gctx.zg, "Get Ready!", point, @intCast(u8, size));
         }
     } else {
         set_game_state(gctx, GameState.RUNNING);
@@ -395,7 +395,7 @@ fn run_game_over(gctx: *GameContext) !void {
         var magnification: i32 = @intCast(i32, @divTrunc(gctx.game_state_ticker.counter_ms, 50));
         var size = if (magnification < 10) magnification else 20 - magnification;
         if (size > 0) {
-            try ziggame.font.render_centered(gctx.zg, "Game Over", point.x, point.y, @intCast(u8, size));
+            try game.text.draw_centered(gctx.zg, "Game Over", point, @intCast(u8, size));
         }
     } else {
         set_game_state(gctx, GameState.ATTRACT);
@@ -405,9 +405,9 @@ fn run_game_over(gctx: *GameContext) !void {
 fn run_game_over_high_score(gctx: *GameContext) !void {
     var point = get_screen_center(gctx);
     if (gctx.game_state_ticker.counter_ms <= 2000) {
-        try ziggame.font.render_centered(gctx.zg, "Congratulations!", point.x, point.y, 4);
+        try game.text.draw_centered(gctx.zg, "Congratulations!", point, 4);
     } else if (gctx.game_state_ticker.counter_ms <= 4000) {
-        try ziggame.font.render_centered(gctx.zg, "New High Score!", point.x, point.y, 4);
+        try game.text.draw_centered(gctx.zg, "New High Score!", point, 4);
     } else {
         set_game_state(gctx, GameState.ENTER_HIGH_SCORE);
     }
@@ -422,7 +422,7 @@ fn run_next_level(gctx: *GameContext) !void {
 
 fn run_level_complete(gctx: *GameContext) !void {
     var point = get_screen_center(gctx);
-    try ziggame.font.render_centered(gctx.zg, "Level Complete!", point.x, point.y, 3);
+    try game.text.draw_centered(gctx.zg, "Level Complete!", point, 3);
 
     if (gctx.game_state_ticker.counter_ms > 2000) {
         set_game_state(gctx, GameState.NEXT_LEVEL);
@@ -445,7 +445,7 @@ fn run_enter_high_score(gctx: *GameContext) !void {
     var scaled_char_wh: i32 = 8 * TEXT_SCALING;
 
     var point = get_screen_center(gctx);
-    try ziggame.font.render_centered(gctx.zg, "Enter Your Name", point.x, point.y, TEXT_SCALING + 1);
+    try game.text.draw_centered(gctx.zg, "Enter Your Name", point, TEXT_SCALING + 1);
 
     var char: u8 = 0;
 
@@ -488,11 +488,11 @@ fn run_enter_high_score(gctx: *GameContext) !void {
 
     var blink_on: bool = ((gctx.game_state_ticker.counter_ms / 500) & 1) == 1;
     var text_x = point.x - ((scaled_char_wh * NameScore.MAX_NAME_LEN) >> 1);
-    try ziggame.font.render(gctx.zg, player_name, text_x, point.y + scaled_char_wh * 4, TEXT_SCALING);
+    try game.text.draw(gctx.zg, player_name, .{ .x = text_x, .y = point.y + scaled_char_wh * TEXT_SCALING }, TEXT_SCALING);
 
     if (blink_on) {
         var cursor_x = text_x + @intCast(i32, gctx.player_score_edit_pos) * scaled_char_wh;
-        try ziggame.font.render(gctx.zg, "_", cursor_x, point.y + scaled_char_wh * 4, TEXT_SCALING);
+        try game.text.draw(gctx.zg, "_", .{ .x = cursor_x, .y = point.y + scaled_char_wh * TEXT_SCALING }, TEXT_SCALING);
     }
 }
 

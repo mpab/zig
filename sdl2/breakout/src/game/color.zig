@@ -1,7 +1,7 @@
 const sdl = @import("sdl-wrapper");
 
 //pub const SCREEN_COLOR = sdl.Color.rgb(249, 251, 255);
-pub const SCREEN_COLOR = sdl.Color.rgb(0, 0, 64);
+pub const SCREEN_COLOR = sdl.Color.rgba(0, 0, 64, 0);
 
 pub const BALL_BORDER_COLOR = sdl.Color.rgb(192, 0, 0);
 pub const BALL_FILL_COLOR = sdl.Color.rgb(255, 0, 0);
@@ -16,5 +16,8 @@ pub const blue = sdl.Color.rgb(0, 0, 255);
 pub const magenta = sdl.Color.rgb(255, 0, 255);
 pub const green = sdl.Color.rgb(0, 255, 0);
 pub const white = sdl.Color.rgb(255, 255, 255);
+
+pub const default_text_color = sdl.Color.rgb(255, 255, 255);
+pub const default_text_color_transparent = sdl.Color.rgba(255, 255, 255, 0);
 
 pub const Gradient = struct { start: sdl.Color, end: sdl.Color };
