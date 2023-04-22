@@ -42,7 +42,7 @@ pub fn render_centered(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: 
 const dbg = std.log.debug;
 
 // uses color alpha to determine transparency
-pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
+pub fn xcreate_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
     var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
     var h: i32 = @intCast(i32, font.info.height * scaling);
     var canvas = if (color.a == 0) try zg.create_transparent_canvas(w, h, color) else try zg.create_canvas(w, h);
@@ -59,7 +59,7 @@ pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: zi
     return canvas;
 }
 
-pub fn x_create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
+pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
     _ = color;
     var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
     var h: i32 = @intCast(i32, font.info.height * scaling);
