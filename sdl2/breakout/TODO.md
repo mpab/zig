@@ -48,6 +48,7 @@
   - transparency on textures
   - sprite polymorphism (hacky version)
   - fonts and text (using a bitmap font and pixel-plotting)
+  - font sprites can now use textures/blitting rather than plotting
   - sprite collisions (using intersecting rectangles)
   - sprites
   - mixer: refactor code to split library and game functionality

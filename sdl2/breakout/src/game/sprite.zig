@@ -69,7 +69,7 @@ pub const BouncingSprite = struct {
 
 pub const DisappearingMovingSprite = struct {
     pub fn text(zg: *ZigGame, c_string: [*c]const u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
-        var canvas = try shape.create_canvas(zg, 1, 1);
+        var canvas = try zg.create_canvas(1, 1);
         return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
     }
 
@@ -101,47 +101,39 @@ pub const DisappearingMovingSprite = struct {
 };
 
 pub const ScrollingSprite = struct {
-    pub fn text(zg: *ZigGame, c_string: [*c]const u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
-        var canvas = try shape.create_canvas(zg, 1, 1);
-        return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
+    pub fn text(zg: *ZigGame, c_string: []const u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
+        var canvas = try ziggame.font.create_text_canvas(zg, c_string, 3);
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
     }
 
     pub fn vartext(zg: *ZigGame, var_string: []u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
-        var canvas = try shape.create_canvas(zg, 1, 1);
-        return .{ .__v_draw = v_draw_string, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = var_string } };
+        var canvas = try ziggame.font.create_text_canvas(zg, var_string, 3);
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = var_string } };
     }
 
     pub fn clone(base: ziggame.sprite.Sprite) ziggame.sprite.Sprite {
-        return .{ .__v_draw = v_draw, .__v_update = v_update, .canvas = base.canvas, .bounds = base.bounds, .x = base.x, .y = base.y, .ext = base.ext };
-    }
-
-    fn v_draw(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
-        if (self.ext.state < 0) return; // termination state < 0
-        BasicSprite.v_draw(self, zg);
-    }
-
-    fn v_draw_string(self: ziggame.sprite.Sprite, zg: *ZigGame) void {
-        if (self.ext.state < 0) return; // termination state < 0
-        ziggame.font.render_centered(zg, self.ext.string, self.x, self.y, 3) catch return;
+        return .{ .__v_draw = ziggame.sprite.Sprite.v_draw, .__v_update = v_update, .canvas = base.canvas, .bounds = base.bounds, .x = base.x, .y = base.y, .ext = base.ext };
     }
 
     fn v_update(self: *ziggame.sprite.Sprite) void {
+        if (self.ext.state < 0) return; // termination state < 0
+
         self.x += self.ext.dx * self.ext.vel;
         self.y += self.ext.dy * self.ext.vel;
 
         var sr = from_sprite(self);
         var bounds = from_sdl_rect(self.bounds);
 
-        if (sr.left < bounds.left) {
+        if ((self.ext.dx < 0) and (sr.left < (bounds.left - self.canvas.width))) {
             sr.left = bounds.right;
         }
-        if (sr.right > bounds.right) {
-            sr.left = bounds.left;
+        if ((self.ext.dx > 0) and (sr.left > bounds.right)) {
+            sr.left = bounds.left - self.canvas.width;
         }
-        if (sr.top < bounds.top) {
+        if ((self.ext.dy < 0) and (sr.top < (bounds.top - self.canvas.height))) {
             sr.top = bounds.bottom;
         }
-        if (sr.bottom > bounds.bottom) {
+        if ((self.ext.dy > 0) and (sr.bottom > (bounds.bottom + self.canvas.height))) {
             sr.top = bounds.top;
         }
 

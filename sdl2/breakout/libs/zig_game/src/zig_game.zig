@@ -88,8 +88,23 @@ pub const ZigGame = struct {
         ) orelse return error.SdlError;
         return ptr;
     }
+
+    pub fn create_canvas(self: *ZigGame, width: i32, height: i32) !Canvas {
+        var texture = try sdl.createTexture(self.renderer, self.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
+        return Canvas.init(texture, width, height);
+    }
+
+    pub fn create_transparent_canvas(self: *ZigGame, width: i32, height: i32, fill: sdl.Color) !Canvas {
+        var canvas = try self.create_canvas(width, height);
+        try canvas.texture.setBlendMode(sdl.BlendMode.blend);
+        var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
+        const r = self.renderer;
+        try r.setTarget(canvas.texture);
+        var fill_t = fill;
+        fill_t.a = 0;
+        try r.setColor(fill_t);
+        try r.fillRect(rect);
+        self.reset_render_target();
+        return canvas;
+    }
 };
-
-// TODO
-// Rect converters: Rect <-> sdl.Rectangle, Rect <-> c_sdl.SDL_Rect
-

@@ -561,7 +561,8 @@ fn replace_high_scores(gctx: *GameContext) !void {
     // TODO: text justification
     gctx.text.list.clearAndFree();
     var pos = get_screen_center(gctx);
-    var title = try game.sprite.ScrollingSprite.text(gctx.zg, "High Scores", gctx.bounds, pos.x, pos.y, 1, 0, -1);
+    var title = try game.sprite.ScrollingSprite.text(gctx.zg, "High Scores:", gctx.bounds, pos.x, pos.y, 2, 0, -1);
+    title.x -= title.canvas.width >> 1;
     // gradient color.MIDBLUE_TO_LIGHTBLUE_GRADIENT, color.RED_TO_ORANGE_GRADIENT)
     try gctx.text.add(title);
 
@@ -572,16 +573,16 @@ fn replace_high_scores(gctx: *GameContext) !void {
     for (gctx.scores.items) |_| {
         if (idx < PLAYER_SCORE_IDX) {
             //var score_text = try std.fmt.allocPrint(std.heap.page_allocator, "{s}    {}", .{ ns.name, ns.score });
-            var name_sprite = try game.sprite.ScrollingSprite.text(gctx.zg, &gctx.scores.items[idx].name, gctx.bounds, pos.x - scaled_char_wh * 5, pos.y + yoff, 1, 0, -1);
+            var name_sprite = try game.sprite.ScrollingSprite.text(gctx.zg, &gctx.scores.items[idx].name, gctx.bounds, pos.x - scaled_char_wh * 6, pos.y + yoff, 2, 0, -1);
             try gctx.text.add(name_sprite);
 
             var score_text = try std.fmt.allocPrint(std.heap.page_allocator, "{}", .{gctx.scores.items[idx].score});
-            var score_max_chars: i32 = 9;
+            var score_max_chars: i32 = 6;
             var score_text_len = @intCast(i32, score_text.len);
             var rhs = score_max_chars - score_text_len;
-            var score_x = pos.x + 16 * scaled_char_wh + (scaled_char_wh * rhs) >> 1; // magic numbers because text centering is on by default
+            var score_x = pos.x + scaled_char_wh * rhs; // magic numbers because text centering is on by default
             //dbg("{}, {}, {}: {}\n", .{ score_max_chars, score_text_len, rhs, score_x });
-            var score_sprite = try game.sprite.ScrollingSprite.vartext(gctx.zg, score_text, gctx.bounds, score_x, pos.y + yoff, 1, 0, -1);
+            var score_sprite = try game.sprite.ScrollingSprite.vartext(gctx.zg, score_text, gctx.bounds, score_x, pos.y + yoff, 2, 0, -1);
             try gctx.text.add(score_sprite);
             yoff = yoff + scaled_char_wh;
         }

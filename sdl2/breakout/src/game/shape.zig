@@ -3,31 +3,12 @@ const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
 const color = @import("color.zig");
 
-pub fn create_canvas(zg: *ZigGame, width: i32, height: i32) !ziggame.Canvas {
-    var texture = try sdl.createTexture(zg.renderer, zg.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
-    return ziggame.Canvas.init(texture, width, height);
-}
-
 pub fn filled_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !ziggame.Canvas {
-    var canvas = try create_canvas(zg, width, height);
+    var canvas = try zg.create_canvas(width, height);
     var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
     const r = zg.renderer;
     try r.setTarget(canvas.texture);
     try r.setColor(fill);
-    try r.fillRect(rect);
-    zg.reset_render_target();
-    return canvas;
-}
-
-pub fn transparent_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !ziggame.Canvas {
-    var canvas = try create_canvas(zg, width, height);
-    try canvas.texture.setBlendMode(sdl.BlendMode.blend);
-    var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
-    const r = zg.renderer;
-    try r.setTarget(canvas.texture);
-    var fill_t = fill;
-    fill_t.a = 0;
-    try r.setColor(fill_t);
     try r.fillRect(rect);
     zg.reset_render_target();
     return canvas;
@@ -158,7 +139,7 @@ pub fn circle(renderer: sdl.Renderer, xcc: i32, ycc: i32, radius: i32) !void {
 
 pub fn ball(zg: *ZigGame, radius: i32) !ziggame.Canvas {
     var radiusx2: i32 = radius * 2;
-    var canvas = try transparent_rect(zg, radiusx2, radiusx2, color.SCREEN_COLOR);
+    var canvas = try zg.create_transparent_canvas(radiusx2, radiusx2, color.SCREEN_COLOR);
     const r = zg.renderer;
     try r.setTarget(canvas.texture);
     try r.setColor(color.BALL_BORDER_COLOR);
@@ -217,7 +198,7 @@ pub fn bat(zg: *ZigGame) !ziggame.Canvas {
 pub fn vertical_gradient_filled_canvas(zg: *ZigGame, width: i32, height: i32, start: sdl.Color, end: sdl.Color) !ziggame.Canvas {
     // Returns a canvas containing a texture with a vertical linear gradient filling the entire texture
 
-    var canvas = try create_canvas(zg, width, height);
+    var canvas = try zg.create_canvas(width, height);
 
     const r = zg.renderer;
     try r.setTarget(canvas.texture);
