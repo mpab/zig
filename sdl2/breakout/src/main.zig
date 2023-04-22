@@ -619,7 +619,8 @@ pub fn main() !void {
     var zgContext = try ZigGame.init("breakout", game.constant.SCREEN_WIDTH, game.constant.SCREEN_HEIGHT);
     var mixer = try game.mixer.Mixer.init();
     var gctx = try GameContext.configure(&zgContext, &mixer);
-
+    try replace_bricks(&gctx);
+    set_game_state(&gctx, GameState.GAME_OVER);
     //set_game_state(&gctx, GameState.ENTER_HIGH_SCORE);
     reset_ball(&gctx);
     var renderer = gctx.zg.renderer;

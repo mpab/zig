@@ -2,6 +2,7 @@ const ziggame = @import("zig-game"); // namespace
 const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
 const color = @import("color.zig");
+pub const constant = @import("constant.zig");
 
 pub fn filled_rect(zg: *ZigGame, width: i32, height: i32, fill: sdl.Color) !ziggame.Canvas {
     var canvas = try zg.create_canvas(width, height);
@@ -191,6 +192,7 @@ pub fn brick(zg: *ZigGame, width: i32, height: i32, row: i32) !ziggame.Canvas {
 // }
 
 pub fn bat(zg: *ZigGame) !ziggame.Canvas {
-    var canvas = try zg.vertical_gradient_filled_canvas(80, 16, color.green, color.SCREEN_COLOR);
+    var canvas = try zg.create_canvas(constant.BRICK_WIDTH * 2, constant.BRICK_HEIGHT);
+    try zg.fill_vertical_gradient(canvas, color.green, color.SCREEN_COLOR);
     return canvas;
 }
