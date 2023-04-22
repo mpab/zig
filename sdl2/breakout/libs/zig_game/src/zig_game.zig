@@ -98,16 +98,15 @@ pub const ZigGame = struct {
     pub fn create_transparent_canvas(self: *ZigGame, width: i32, height: i32, fill: sdl.Color) !Canvas {
         var canvas = try self.create_canvas(width, height);
         try canvas.texture.setBlendMode(sdl.BlendMode.blend);
-        var rect = sdl.Rectangle{ .x = 0, .y = 0, .width = width, .height = height };
         const r = self.renderer;
         try r.setTarget(canvas.texture);
         try r.setColor(fill);
-        try r.fillRect(rect);
+        try r.clear();
         self.reset_render_target();
         return canvas;
     }
 
-    pub fn fill_vertical_gradient(zg: *ZigGame, canvas: Canvas, start: sdl.Color, end: sdl.Color) !void {
+    pub fn fill_vertical_gradient(zg: *ZigGame, canvas: Canvas, start: sdl.Color, end: sdl.Color, start_y: i32, end_y: i32) !void {
         // fills an entire canvas texture with a vertical linear gradient
 
         const r = zg.renderer;
@@ -132,8 +131,8 @@ pub const ZigGame = struct {
         var bm = (eb - sb) * dd;
         var am = (ea - sa) * dd;
 
-        var y: i32 = 0;
-        while (y != canvas.height) : (y += 1) {
+        var y: i32 = start_y;
+        while (y != end_y) : (y += 1) {
             var fy = @intToFloat(f32, y);
             var fgr = sr + rm * fy;
             var fgg = sg + gm * fy;

@@ -4,6 +4,7 @@ const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
 const shape = @import("shape.zig");
 const color = @import("color.zig");
+const constant = @import("constant.zig");
 
 pub fn from_sdl_rect(r: sdl.Rectangle) ziggame.Rect {
     return .{ .left = r.x, .top = r.y, .right = r.x + r.width, .bottom = r.y + r.height };
@@ -90,7 +91,7 @@ pub const DisappearingMovingSprite = struct {
             self.ext.string,
             self.x,
             self.y,
-            2,
+            constant.SPRITE_TEXT_SCALE,
             color.default_text_color,
         ) catch return;
     }
@@ -109,23 +110,23 @@ pub const DisappearingMovingSprite = struct {
 };
 
 pub const ScrollingSprite = struct {
-    pub fn text(zg: *ZigGame, c_string: []const u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
+    pub fn text(zg: *ZigGame, string: []const u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
         var canvas = try ziggame.font.create_text_canvas(
             zg,
-            c_string,
-            3,
-            color.default_text_color_transparent,
+            string,
+            constant.SPRITE_TEXT_SCALE,
+            color.default_text_color,
         );
-        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = std.mem.span(c_string) } };
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = string } };
     }
 
-    pub fn vartext(zg: *ZigGame, var_string: []u8, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
-        var canvas = try ziggame.font.create_text_canvas(
-            zg,
-            var_string,
-            3,
-            color.default_text_color_transparent,
-        );
+    pub fn text_gradient(zg: *ZigGame, var_string: []const u8, gradient: color.Gradient, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
+        var canvas = try ziggame.font.create_gradient_text_canvas(zg, var_string, constant.SPRITE_TEXT_SCALE, gradient.start, gradient.end);
+        return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = var_string } };
+    }
+
+    pub fn text_dual_gradient(zg: *ZigGame, var_string: []const u8, gradient: color.DualGradient, bounds: sdl.Rectangle, x: i32, y: i32, vel: i32, dx: i32, dy: i32) !ziggame.sprite.Sprite {
+        var canvas = try ziggame.font.create_dual_gradient_text_canvas(zg, var_string, constant.SPRITE_TEXT_SCALE, gradient.start.start, gradient.start.end, gradient.end.start, gradient.end.end);
         return .{ .__v_draw = BasicSprite.v_draw, .__v_update = v_update, .canvas = canvas, .bounds = bounds, .x = x, .y = y, .ext = .{ .vel = vel, .dx = dx, .dy = dy, .state = 0, .string = var_string } };
     }
 

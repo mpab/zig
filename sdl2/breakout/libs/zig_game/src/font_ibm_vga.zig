@@ -33,6 +33,30 @@ pub fn draw(zg: *ZigGame, letter: u8, pos: _type.Point, scaling: u8) !void {
     }
 }
 
+pub fn draw_inverse(zg: *ZigGame, letter: u8, pos: _type.Point, scaling: u8) !void {
+    var plot_x: i32 = pos.x;
+    var plot_y: i32 = pos.y + info.height * scaling - 1; // -1 fudge factor...
+    var long_long = bitmap(letter);
+    var bit: u64 = 0x0000000000000001;
+    for (range(info.height)) |_| {
+        for (range(info.width)) |_| {
+            if (long_long & bit != bit) {
+                var j: i32 = 0;
+                while (j != scaling) : (j += 1) {
+                    var i: i32 = 0;
+                    while (i != scaling) : (i += 1) {
+                        try zg.renderer.drawPoint(plot_x + i, plot_y - j);
+                    }
+                }
+            }
+            bit = bit << 1;
+            plot_x = plot_x + scaling;
+        }
+        plot_x = pos.x;
+        plot_y = plot_y - scaling;
+    }
+}
+
 pub const info = _type.FontInfo{
     .width = 8,
     .height = 8,

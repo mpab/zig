@@ -4,10 +4,7 @@
 
 - integrate/convert some of this: https://github.com/ferzkopp/SDL_gfx
 
-- game (basic functionality)
-  - sounds
 - game (improved functionality)
-  - gradient font rendering
   - drawing: more primitives (rectangle with rounded edges, ...)
 - improve sprite velocity logic using polar coordinates
 - installation and setup
@@ -15,6 +12,7 @@
 - zig-game library
   - font selection (currently hard-coded)
   - implement less hacky polymorphic sprites
+  - investigate using custom blend modes for text cookie-cutting?
   - create Font object
     - to hold and manage context information such as font size, render centering, etc
     - should also contain a reference to the ZigGame context for rendering
@@ -23,10 +21,12 @@
 
 - basic SDL bootstrapping
 - game (basic functionality)
+  - gradient font rendering
+  - sound
   - remaining game states
   - high scores
   - levels
-  - most game states
+  - all game states
   - ticker/state ticker
   - ticker/ball speedup ticker (ball speedup during level)
   - scoring
@@ -51,7 +51,10 @@
   - font sprites can now use textures/blitting rather than plotting
   - sprite collisions (using intersecting rectangles)
   - sprites
-  - mixer: refactor code to split library and game functionality
+  - mixer: refactored code to split library and game functionality
+  - gradient font rendering
+    - implemented using bitmap plotting
+    - transparency cookie-cutting implemented the same way
 - disappearing animation sprite for brick and score
 - text sprites (not using textures)
 - improved sprite velocity logic using {.vel .dx .dy}

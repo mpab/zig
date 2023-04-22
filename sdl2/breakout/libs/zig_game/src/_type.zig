@@ -25,3 +25,10 @@ pub const FontInfo = struct {
     height: u8,
     data: [128]u64,
 };
+
+pub const TextDrawInfo = struct {
+    fg: sdl.Color,
+    bg: sdl.Color,
+    scaling: u8,
+    renderer: sdl.Renderer,
+};

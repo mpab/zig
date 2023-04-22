@@ -193,6 +193,6 @@ pub fn brick(zg: *ZigGame, width: i32, height: i32, row: i32) !ziggame.Canvas {
 
 pub fn bat(zg: *ZigGame) !ziggame.Canvas {
     var canvas = try zg.create_canvas(constant.BRICK_WIDTH * 2, constant.BRICK_HEIGHT);
-    try zg.fill_vertical_gradient(canvas, color.green, color.SCREEN_COLOR);
+    try zg.fill_vertical_gradient(canvas, color.green, color.SCREEN_COLOR, 0, canvas.height);
     return canvas;
 }

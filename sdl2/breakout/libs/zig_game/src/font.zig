@@ -19,6 +19,10 @@ pub fn draw_glyph(zg: *ZigGame, letter: u8, x: i32, y: i32, scaling: u8) !void {
     try font.draw(zg, letter, .{ .x = x, .y = y }, scaling);
 }
 
+pub fn draw_glyph_inverse(zg: *ZigGame, letter: u8, x: i32, y: i32, scaling: u8) !void {
+    try font.draw_inverse(zg, letter, .{ .x = x, .y = y }, scaling);
+}
+
 pub fn render(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8, color: ziggame.sdl.Color) !void {
     try zg.renderer.setColor(color);
     var dx: i32 = 0;
@@ -42,7 +46,7 @@ pub fn render_centered(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: 
 const dbg = std.log.debug;
 
 // uses color alpha to determine transparency
-pub fn xcreate_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
+pub fn old_create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
     var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
     var h: i32 = @intCast(i32, font.info.height * scaling);
     var canvas = if (color.a == 0) try zg.create_transparent_canvas(w, h, color) else try zg.create_canvas(w, h);
@@ -60,44 +64,64 @@ pub fn xcreate_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: z
 }
 
 pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: ziggame.sdl.Color) !_type.Canvas {
-    _ = color;
     var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
     var h: i32 = @intCast(i32, font.info.height * scaling);
 
-    var rect = ziggame.sdl.Rectangle{ .x = 0, .y = 0, .width = w, .height = h };
-    var gradient_canvas = try zg.create_transparent_canvas(rect.width, rect.height, ziggame.sdl.Color.rgba(0, 0, 0, 0));
-    try zg.fill_vertical_gradient(gradient_canvas, ziggame.sdl.Color.rgb(255, 0, 0), ziggame.sdl.Color.rgb(0, 0, 255));
+    var canvas = try zg.create_canvas(w, h);
+    try zg.renderer.setTarget(canvas.texture);
+    try zg.renderer.setColor(color);
+    try zg.renderer.clear();
+    try canvas.texture.setBlendMode(ziggame.sdl.BlendMode.blend);
 
-    // try zg.renderer.setTarget(gradient_canvas.texture);
-    // rect.x += 4;
-    // rect.y += 4;
-    // rect.width -= 8;
-    // rect.height -= 8;
-    // try zg.renderer.setColor(ziggame.sdl.Color.rgba(0, 0, 0, 0));
-    // try zg.renderer.fillRect(rect);
-
-    var mask_canvas = try zg.create_transparent_canvas(w, h, ziggame.sdl.Color.rgba(0, 0, 0, 255));
-    try zg.renderer.setTarget(mask_canvas.texture);
-    try zg.renderer.setColor(ziggame.sdl.Color.rgba(255, 255, 255, 0));
+    try zg.renderer.setColor(ziggame.sdl.Color.rgba(0, 0, 0, 0));
     var dx: i32 = 0;
     for (text) |letter| {
-        try draw_glyph(zg, letter, dx, 0, scaling);
+        try draw_glyph_inverse(zg, letter, dx, 0, scaling);
         dx += font.info.width * scaling;
     }
-    try zg.renderer.setTarget(gradient_canvas.texture);
-    try zg.renderer.copy(mask_canvas.texture, rect, rect);
+    zg.reset_render_target();
+    return canvas;
+}
 
-    // try zg.renderer.setTarget(mask_canvas.texture);
-    // try zg.renderer.setColor(color);
-    // var dx: i32 = 0;
-    // for (text) |letter| {
-    //     try draw_glyph(zg, letter, dx, 0, scaling);
-    //     dx += font.info.width * scaling;
-    // }
+pub fn create_gradient_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, start: ziggame.sdl.Color, end: ziggame.sdl.Color) !_type.Canvas {
+    var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
+    var h: i32 = @intCast(i32, font.info.height * scaling);
 
-    // try zg.renderer.setTarget(gradient_canvas.texture);
-    // try zg.renderer.copy(mask_canvas.texture, rect, rect);
+    var canvas = try zg.create_canvas(w, h);
+    try zg.fill_vertical_gradient(canvas, start, end, 0, h);
+
+    try canvas.texture.setBlendMode(ziggame.sdl.BlendMode.blend);
+    try zg.renderer.setTarget(canvas.texture);
+
+    try zg.renderer.setColor(ziggame.sdl.Color.rgba(0, 0, 0, 0));
+    var dx: i32 = 0;
+    for (text) |letter| {
+        try draw_glyph_inverse(zg, letter, dx, 0, scaling);
+        dx += font.info.width * scaling;
+    }
 
     zg.reset_render_target();
-    return gradient_canvas;
+    return canvas;
+}
+
+pub fn create_dual_gradient_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, start1: ziggame.sdl.Color, end1: ziggame.sdl.Color, start2: ziggame.sdl.Color, end2: ziggame.sdl.Color) !_type.Canvas {
+    var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
+    var h: i32 = @intCast(i32, font.info.height * scaling);
+
+    var canvas = try zg.create_canvas(w, h);
+    try zg.fill_vertical_gradient(canvas, start1, end1, 0, (h >> 1));
+    try zg.fill_vertical_gradient(canvas, start2, end2, (h >> 1), h);
+
+    try canvas.texture.setBlendMode(ziggame.sdl.BlendMode.blend);
+    try zg.renderer.setTarget(canvas.texture);
+
+    try zg.renderer.setColor(ziggame.sdl.Color.rgba(0, 0, 0, 0));
+    var dx: i32 = 0;
+    for (text) |letter| {
+        try draw_glyph_inverse(zg, letter, dx, 0, scaling);
+        dx += font.info.width * scaling;
+    }
+
+    zg.reset_render_target();
+    return canvas;
 }
