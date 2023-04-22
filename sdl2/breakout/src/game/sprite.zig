@@ -91,7 +91,7 @@ pub const DisappearingMovingSprite = struct {
             self.ext.string,
             self.x,
             self.y,
-            constant.SPRITE_TEXT_SCALE,
+            constant.SPRITE_TEXT_SCALE - 1, //TODO: fix magic number
             color.default_text_color,
         ) catch return;
     }

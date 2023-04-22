@@ -4,11 +4,8 @@ const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
 
 const game = @import("game/game.zig");
-//const range = zg.util.range;
 
 const dbg = std.log.debug;
-
-//const TEXT_SCALING: u8 = 3; // hack for now
 
 const GameState = enum {
     NEW_GAME,
@@ -131,7 +128,7 @@ const GameContext = struct {
 
     input: InputEvents = .{},
 
-    pub fn configure(zg: *ZigGame, mixer: *game.mixer.Mixer) !GameContext {
+    pub fn init(zg: *ZigGame, mixer: *game.mixer.Mixer) !GameContext {
         var gctx: GameContext = .{
             .zg = zg,
             .mixer = mixer,
@@ -254,7 +251,8 @@ fn draw_level_lives_score(gctx: *GameContext) !void {
         "Level: {d} Lives: {d} Score: {d}",
         .{ gctx.level, gctx.lives, player_ns.score },
     );
-    try game.text.draw(gctx.zg, string, .{ .x = 4, .y = 4 }, 2);
+    //try game.text.draw(gctx.zg, string, .{ .x = 4, .y = 4 }, 2);
+    try ziggame.font.render(gctx.zg, string, 4, 4, 2, game.color.cyan);
     defer std.heap.page_allocator.free(string);
 }
 
@@ -620,7 +618,7 @@ fn replace_bricks(gctx: *GameContext) !void {
 pub fn main() !void {
     var zgContext = try ZigGame.init("breakout", game.constant.SCREEN_WIDTH, game.constant.SCREEN_HEIGHT);
     var mixer = try game.mixer.Mixer.init();
-    var gctx = try GameContext.configure(&zgContext, &mixer);
+    var gctx = try GameContext.init(&zgContext, &mixer);
     try replace_bricks(&gctx);
     set_game_state(&gctx, GameState.GAME_OVER);
     //set_game_state(&gctx, GameState.ENTER_HIGH_SCORE);
