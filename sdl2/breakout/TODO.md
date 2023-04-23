@@ -10,6 +10,8 @@
 - installation and setup
   - fix zig sdl library hack
 - zig-game library
+  - refactor font/text into game and library code
+  - refactor mixer into game and library code
   - font selection (currently hard-coded)
   - implement less hacky polymorphic sprites
   - investigate using custom blend modes for text cookie-cutting?
@@ -38,6 +40,7 @@
   - an extended rect type including top, bottom, etc. to better map to pygame
   - drawing: more primitives (filled circle)
   - sound support using SDL mixer
+  - added SDL font support (TTF)
 - installation and setup
   - scripts to pull down the SDL libs and headers
   - scripts to pull down the sdl zig wrapper (temp solution)

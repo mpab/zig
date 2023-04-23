@@ -1,11 +1,9 @@
 const std = @import("std");
+const dbg = std.log.debug;
 const ziggame = @import("zig-game"); // namespace
 const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
-
 const game = @import("game/game.zig");
-
-const dbg = std.log.debug;
 
 const GameState = enum {
     NEW_GAME,
@@ -107,6 +105,7 @@ const PLAYER_SCORE_IDX = 3;
 const GameContext = struct {
     zg: *ZigGame,
     mixer: *game.mixer.Mixer,
+    font: *game.font.Font,
     level: u16 = 0,
     difficulty_level: u16 = 0,
     lives: u64 = 0,
@@ -128,10 +127,11 @@ const GameContext = struct {
 
     input: InputEvents = .{},
 
-    pub fn init(zg: *ZigGame, mixer: *game.mixer.Mixer) !GameContext {
+    pub fn init(zg: *ZigGame, mixer: *game.mixer.Mixer, font: *game.font.Font) !GameContext {
         var gctx: GameContext = .{
             .zg = zg,
             .mixer = mixer,
+            .font = font,
             .bounds = sdl.Rectangle{ .x = 0, .y = 0, .width = zg.size.width_pixels, .height = zg.size.height_pixels },
             .game_state_ticker = game.time.Ticker.init(),
             .bat_ball_debounce_ticker = game.time.Ticker.init(),
@@ -252,7 +252,8 @@ fn draw_level_lives_score(gctx: *GameContext) !void {
         .{ gctx.level, gctx.lives, player_ns.score },
     );
     //try game.text.draw(gctx.zg, string, .{ .x = 4, .y = 4 }, 2);
-    try ziggame.font.render(gctx.zg, string, 4, 4, 2, game.color.cyan);
+    //try ziggame.font.render(gctx.zg, string, 4, 4, 2, game.color.cyan);
+    try gctx.font.render(string, 4, 4);
     defer std.heap.page_allocator.free(string);
 }
 
@@ -440,10 +441,10 @@ fn run_enter_high_score(gctx: *GameContext) !void {
     var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
     var player_name = &player_ns.name;
 
-    var scaled_char_wh: i32 = 8 * game.constant.SPRITE_TEXT_SCALE;
+    var scaled_char_wh: i32 = 8 * game.constant.MEDIUM_TEXT_SCALE;
 
     var point = get_screen_center(gctx);
-    try game.text.draw_centered(gctx.zg, "Enter Your Name", point, game.constant.SPRITE_TEXT_SCALE + 1);
+    try game.text.draw_centered(gctx.zg, "Enter Your Name", point, game.constant.MEDIUM_TEXT_SCALE);
 
     var char: u8 = 0;
 
@@ -486,11 +487,11 @@ fn run_enter_high_score(gctx: *GameContext) !void {
 
     var blink_on: bool = ((gctx.game_state_ticker.counter_ms / 500) & 1) == 1;
     var text_x = point.x - ((scaled_char_wh * NameScore.MAX_NAME_LEN) >> 1);
-    try game.text.draw(gctx.zg, player_name, .{ .x = text_x, .y = point.y + scaled_char_wh * game.constant.SPRITE_TEXT_SCALE }, game.constant.SPRITE_TEXT_SCALE);
+    try game.text.draw(gctx.zg, player_name, .{ .x = text_x, .y = point.y + scaled_char_wh * game.constant.MEDIUM_TEXT_SCALE }, game.constant.MEDIUM_TEXT_SCALE);
 
     if (blink_on) {
         var cursor_x = text_x + @intCast(i32, gctx.player_score_edit_pos) * scaled_char_wh;
-        try game.text.draw(gctx.zg, "_", .{ .x = cursor_x, .y = point.y + scaled_char_wh * game.constant.SPRITE_TEXT_SCALE }, game.constant.SPRITE_TEXT_SCALE);
+        try game.text.draw(gctx.zg, "_", .{ .x = cursor_x, .y = point.y + scaled_char_wh * game.constant.MEDIUM_TEXT_SCALE }, game.constant.MEDIUM_TEXT_SCALE);
     }
 }
 
@@ -565,7 +566,7 @@ fn replace_high_scores(gctx: *GameContext) !void {
     try gctx.text.add(title);
 
     var sgrad: game.color.DualGradient = .{ .start = game.color.ORANGE_TO_GOLD_GRADIENT, .end = game.color.GOLD_TO_ORANGE_GRADIENT };
-    var scaled_char_wh: i32 = 8 * game.constant.SPRITE_TEXT_SCALE;
+    var scaled_char_wh: i32 = 8 * game.constant.MEDIUM_TEXT_SCALE;
 
     var yoff: i32 = scaled_char_wh * 2;
     const spacing = 8;
@@ -618,7 +619,8 @@ fn replace_bricks(gctx: *GameContext) !void {
 pub fn main() !void {
     var zgContext = try ZigGame.init("breakout", game.constant.SCREEN_WIDTH, game.constant.SCREEN_HEIGHT);
     var mixer = try game.mixer.Mixer.init();
-    var gctx = try GameContext.init(&zgContext, &mixer);
+    var font = try game.font.Font.init(&zgContext);
+    var gctx = try GameContext.init(&zgContext, &mixer, &font);
     try replace_bricks(&gctx);
     set_game_state(&gctx, GameState.GAME_OVER);
     //set_game_state(&gctx, GameState.ENTER_HIGH_SCORE);

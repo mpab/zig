@@ -5,3 +5,5 @@ pub const text = @import("text.zig");
 pub const mixer = @import("mixer.zig");
 pub const time = @import("time.zig");
 pub const constant = @import("constant.zig");
+
+pub const font = @import("font.zig");

@@ -1,10 +1,12 @@
 const std = @import("std");
+const dbg = std.log.debug;
 
 // TODO: replace with module in build file
-const c_sdl = @cImport({
+pub const c = @cImport({
     @cInclude("SDL.h");
+    @cInclude("SDL_ttf.h");
 });
-//pub const c_sdl = @import("sdl-native");
+//pub const c = @import("sdl-native");
 
 //pub const sdl = @import("wrapper/sdl.zig");
 pub const sdl = @import("sdl-wrapper"); // configured in build.zig
@@ -17,18 +19,19 @@ pub const time = @import("time.zig");
 pub const color = @import("color.zig");
 const _type = @import("_type.zig");
 
-pub fn panic() noreturn {
-    const str = @as(?[*:0]const u8, c_sdl.SDL_GetError()) orelse "unknown error";
+pub fn c_sdl_panic() noreturn {
+    const str = @as(?[*:0]const u8, c.SDL_GetError()) orelse "unknown error";
+    dbg("{s}", .{str});
     @panic(std.mem.sliceTo(str, 0));
 }
 
 pub fn quit() void {
-    c_sdl.SDL_Quit();
+    c.SDL_Quit();
 }
 
 fn _init() void {
-    if (c_sdl.SDL_Init(c_sdl.SDL_INIT_VIDEO | c_sdl.SDL_INIT_EVENTS | c_sdl.SDL_INIT_AUDIO) < 0) {
-        panic();
+    if (c.SDL_Init(c.SDL_INIT_VIDEO | c.SDL_INIT_EVENTS | c.SDL_INIT_AUDIO) < 0) {
+        c_sdl_panic();
     }
 }
 
@@ -50,10 +53,10 @@ pub const ZigGame = struct {
     pub fn init(title: [*c]const u8, window_width: u32, window_height: u32) !ZigGame {
         _init();
 
-        var raw_window_ptr = c_sdl.SDL_CreateWindow(title, c_sdl.SDL_WINDOWPOS_CENTERED, c_sdl.SDL_WINDOWPOS_CENTERED, @intCast(c_int, window_width), @intCast(c_int, window_height), 0) orelse panic();
+        var raw_window_ptr = c.SDL_CreateWindow(title, c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, @intCast(c_int, window_width), @intCast(c_int, window_height), 0) orelse c_sdl_panic();
 
         var window = sdl.Window{ .ptr = raw_window_ptr };
-        var raw_renderer_ptr = c_sdl.SDL_CreateRenderer(raw_window_ptr, 0, c_sdl.SDL_RENDERER_PRESENTVSYNC) orelse panic();
+        var raw_renderer_ptr = c.SDL_CreateRenderer(raw_window_ptr, 0, c.SDL_RENDERER_PRESENTVSYNC) orelse c_sdl_panic();
         var renderer = sdl.Renderer{ .ptr = raw_renderer_ptr };
         var surface = window.getSurface() catch |err| return err;
         var texture = sdl.createTextureFromSurface(renderer, surface) catch |err| return err;
@@ -65,7 +68,7 @@ pub const ZigGame = struct {
     }
 
     pub fn reset_render_target(self: ZigGame) void {
-        _ = c_sdl.SDL_SetRenderTarget(self.renderer.ptr, null);
+        _ = c.SDL_SetRenderTarget(self.renderer.ptr, null);
     }
 
     pub fn create_surface(self: ZigGame, width: u32, height: u32) !sdl.Surface {
@@ -78,8 +81,8 @@ pub const ZigGame = struct {
         return t;
     }
 
-    pub fn create_raw_texture(self: ZigGame, width: u32, height: u32) !*c_sdl.SDL_Texture {
-        const ptr = c_sdl.SDL_CreateTexture(
+    pub fn create_raw_texture(self: ZigGame, width: u32, height: u32) !*c.SDL_Texture {
+        const ptr = c.SDL_CreateTexture(
             self.renderer.ptr,
             @enumToInt(self.format),
             @enumToInt(sdl.Texture.Access.target),

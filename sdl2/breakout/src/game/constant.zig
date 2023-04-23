@@ -9,4 +9,5 @@ pub const BRICK_HEIGHT = SCREEN_HEIGHT / BRICKS_PER_COLUMN;
 
 pub const BALL_RADIUS = 6;
 
-pub const SPRITE_TEXT_SCALE = 3;
+pub const MEDIUM_TEXT_SCALE = 3;
+pub const SMALL_TEXT_SCALE = 2;

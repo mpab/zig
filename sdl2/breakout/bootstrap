@@ -12,9 +12,9 @@ if [ ! -e "$ZIGSDL" ]; then
   cd ..
 
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n});/g' $ZIGPATCHFILEPATH
+    sed -i '' -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n    @cInclude("SDL.h_ttf");\n});/g' $ZIGPATCHFILEPATH
   else
-    sed -i -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n});/g' $ZIGPATCHFILEPATH
+    sed -i -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n    @cInclude("SDL_ttf.h");\n});/g' $ZIGPATCHFILEPATH
   fi
   echo patched $ZIGPATCHFILEPATH
 else

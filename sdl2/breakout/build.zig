@@ -25,12 +25,14 @@ pub fn build(b: *std.build.Builder) void {
     installBinFiles(b, bin_path, &.{
         "SDL2.dll",
         "SDL2_mixer.dll",
+        "SDL2_ttf.dll",
         "ogg.dll",
         "vorbis.dll",
         "vorbisfile.dll",
     });
     exe.linkSystemLibrary("sdl2");
     exe.linkSystemLibrary("sdl2_mixer");
+    exe.linkSystemLibrary("sdl2_ttf");
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());
