@@ -16,17 +16,19 @@ pub fn build(b: *std.build.Builder) void {
     const exe = b.addExecutable("breakout", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
+    exe.linkLibC();
     exe.install();
 
     const vcpkg_root = "./vcpkg_installed/x64-windows";
     exe.addIncludePath(vcpkg_root ++ "/include/SDL2");
     exe.addLibraryPath(vcpkg_root ++ "/lib");
-    var bin_path = vcpkg_root ++ "/bin";
-    installBinFiles(b, bin_path, &.{
-        "SDL2.dll",
+    var source_path = vcpkg_root ++ "/bin";
+    var dest_path = "./bin";
+    installFiles(b, source_path, dest_path, &.{
+        "ogg.dll",
         "SDL2_mixer.dll",
         "SDL2_ttf.dll",
-        "ogg.dll",
+        "SDL2.dll",
         "vorbis.dll",
         "vorbisfile.dll",
     });
@@ -67,13 +69,10 @@ pub fn build(b: *std.build.Builder) void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&exe_tests.step);
-
-    exe.linkLibC();
-    exe.install();
 }
 
-fn installBinFiles(b: *std.build.Builder, path: []const u8, files: []const []const u8) void {
+fn installFiles(b: *std.build.Builder, source_path: []const u8, dest_path: []const u8, files: []const []const u8) void {
     for (files) |file| {
-        b.installBinFile(b.pathJoin(&.{ path, file }), file);
+        b.installFile(b.pathJoin(&.{ source_path, file }), b.pathJoin(&.{ dest_path, file }));
     }
 }

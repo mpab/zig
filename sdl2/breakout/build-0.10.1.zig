@@ -16,21 +16,25 @@ pub fn build(b: *std.build.Builder) void {
     const exe = b.addExecutable("breakout", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
+    exe.linkLibC();
     exe.install();
 
-    const sdl_native_path = "./3rdparty/SDL2-devel-2.26.5-VC";
-    const sdl_native_include_path = sdl_native_path ++ "/include";
-    exe.addIncludePath(sdl_native_include_path);
-    exe.addLibraryPath(sdl_native_path ++ "/lib/x64");
-    b.installBinFile(sdl_native_path ++ "/lib/x64" ++ "/SDL2.dll", "SDL2.dll");
+    const vcpkg_root = "./vcpkg_installed/x64-windows";
+    exe.addIncludePath(vcpkg_root ++ "/include/SDL2");
+    exe.addLibraryPath(vcpkg_root ++ "/lib");
+    var source_path = vcpkg_root ++ "/bin";
+    var dest_path = "./bin";
+    installFiles(b, source_path, dest_path, &.{
+        "ogg.dll",
+        "SDL2_mixer.dll",
+        "SDL2_ttf.dll",
+        "SDL2.dll",
+        "vorbis.dll",
+        "vorbisfile.dll",
+    });
     exe.linkSystemLibrary("sdl2");
-
-    const sdl_mixer_native_path = "./3rdparty/SDL2_mixer-devel-2.6.3-VC";
-    const sdl_mixer_native_include_path = sdl_native_path ++ "/include";
-    exe.addIncludePath(sdl_mixer_native_include_path);
-    exe.addLibraryPath(sdl_mixer_native_path ++ "/lib/x64");
-    b.installBinFile(sdl_mixer_native_path ++ "/lib/x64" ++ "/SDL2_mixer.dll", "SDL2_mixer.dll");
     exe.linkSystemLibrary("sdl2_mixer");
+    exe.linkSystemLibrary("sdl2_ttf");
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());
@@ -43,7 +47,7 @@ pub fn build(b: *std.build.Builder) void {
 
     var sdlwrapperPkg: std.build.Pkg = .{
         .name = "sdl-wrapper",
-        .source = .{ .path = "./3rdparty/SDL.zig/src/wrapper/sdl.zig" },
+        .source = .{ .path = "./deps/SDL.zig/src/wrapper/sdl.zig" },
     };
 
     // zig SDL wrapper
@@ -65,7 +69,10 @@ pub fn build(b: *std.build.Builder) void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&exe_tests.step);
+}
 
-    exe.linkLibC();
-    exe.install();
+fn installFiles(b: *std.build.Builder, source_path: []const u8, dest_path: []const u8, files: []const []const u8) void {
+    for (files) |file| {
+        b.installFile(b.pathJoin(&.{ source_path, file }), b.pathJoin(&.{ dest_path, file }));
+    }
 }

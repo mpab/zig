@@ -20,23 +20,28 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     b.installArtifact(exe);
 
-    const sdl_native_path = "./3rdparty/SDL2-devel-2.26.5-VC";
-    const sdl_native_include_path = sdl_native_path ++ "/include";
-    exe.addIncludePath(sdl_native_include_path);
-    exe.addLibraryPath(sdl_native_path ++ "/lib/x64");
-    b.installBinFile(sdl_native_path ++ "/lib/x64" ++ "/SDL2.dll", "SDL2.dll");
-    exe.linkSystemLibrary("sdl2");
+    const vcpkg_root = "./vcpkg_installed/x64-windows";
+    exe.addIncludePath(vcpkg_root ++ "/include/SDL2");
+    exe.addLibraryPath(vcpkg_root ++ "/lib");
 
-    const sdl_mixer_native_path = "./3rdparty/SDL2_mixer-devel-2.6.3-VC";
-    const sdl_mixer_native_include_path = sdl_native_path ++ "/include";
-    exe.addIncludePath(sdl_mixer_native_include_path);
-    exe.addLibraryPath(sdl_mixer_native_path ++ "/lib/x64");
-    b.installBinFile(sdl_mixer_native_path ++ "/lib/x64" ++ "/SDL2_mixer.dll", "SDL2_mixer.dll");
+    var source_path = vcpkg_root ++ "/bin";
+    var dest_path = "./bin";
+    installFiles(b, source_path, dest_path, &.{
+        "ogg.dll",
+        "SDL2_mixer.dll",
+        "SDL2_ttf.dll",
+        "SDL2.dll",
+        "vorbis.dll",
+        "vorbisfile.dll",
+    });
+
+    exe.linkSystemLibrary("sdl2");
     exe.linkSystemLibrary("sdl2_mixer");
+    exe.linkSystemLibrary("sdl2_ttf");
 
     // zig SDL wrapper
     const sdl_wrapper_module = b.createModule(.{
-        .source_file = .{ .path = "./3rdparty/SDL.zig/src/wrapper/sdl.zig" },
+        .source_file = .{ .path = "./deps/SDL.zig/src/wrapper/sdl.zig" },
         .dependencies = &.{},
     });
     exe.addModule("sdl-wrapper", sdl_wrapper_module);
@@ -59,4 +64,10 @@ pub fn build(b: *std.Build) void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&exe_tests.step);
+}
+
+fn installFiles(b: *std.build.Builder, source_path: []const u8, dest_path: []const u8, files: []const []const u8) void {
+    for (files) |file| {
+        b.installFile(b.pathJoin(&.{ source_path, file }), b.pathJoin(&.{ dest_path, file }));
+    }
 }
