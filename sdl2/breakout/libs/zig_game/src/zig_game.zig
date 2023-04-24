@@ -44,8 +44,8 @@ pub const FontInfo = _type.FontInfo;
 pub const ZigGame = struct {
     window: sdl.Window,
     renderer: sdl.Renderer,
-    surface: sdl.Surface,
-    texture: sdl.Texture,
+    //surface: sdl.Surface,
+    //texture: sdl.Texture,
     format: sdl.PixelFormatEnum,
     size: sdl.Renderer.OutputSize,
     font_scaling: u8 = 1,
@@ -58,13 +58,18 @@ pub const ZigGame = struct {
         var window = sdl.Window{ .ptr = raw_window_ptr };
         var raw_renderer_ptr = c.SDL_CreateRenderer(raw_window_ptr, 0, c.SDL_RENDERER_PRESENTVSYNC) orelse c_sdl_panic();
         var renderer = sdl.Renderer{ .ptr = raw_renderer_ptr };
-        var surface = window.getSurface() catch |err| return err;
-        var texture = sdl.createTextureFromSurface(renderer, surface) catch |err| return err;
-        var info = texture.query() catch |err| return err;
-        var format = info.format;
         var size = renderer.getOutputSize() catch |err| return err;
 
-        return ZigGame{ .window = window, .renderer = renderer, .surface = surface, .texture = texture, .format = format, .size = size };
+        var format = sdl.PixelFormatEnum.argb8888;
+        if (window.getSurface()) |surface| {
+            var texture = sdl.createTextureFromSurface(renderer, surface) catch |err| return err;
+            var info = texture.query() catch |err| return err;
+            format = info.format;
+        } else |_| {
+            dbg("WARN: could not get window surface, using default format: {}", .{format});
+        }
+
+        return ZigGame{ .window = window, .renderer = renderer, .size = size, .format = format };
     }
 
     pub fn reset_render_target(self: ZigGame) void {
