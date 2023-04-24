@@ -11,10 +11,12 @@ if [ ! -e "$ZIGSDL" ]; then
   git clone https://github.com/MasterQ32/SDL.zig.git
   cd ..
 
+export SUBST_STR='s/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n    @cInclude("SDL_ttf.h");\n});/g'
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n    @cInclude("SDL.h_ttf");\n});/g' $ZIGPATCHFILEPATH
+    sed -i '' -e "$SUBST_STR" $ZIGPATCHFILEPATH
   else
-    sed -i -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n    @cInclude("SDL_ttf.h");\n});/g' $ZIGPATCHFILEPATH
+    sed -i -e "$SUBST_STR" $ZIGPATCHFILEPATH
+    # sed -i -e 's/pub const c = @import("sdl-native");/\/\/ zig-game hack...\n\/\/ pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL.h");\n    @cInclude("SDL_ttf.h");\n});/g' $ZIGPATCHFILEPATH
   fi
   echo patched $ZIGPATCHFILEPATH
 else

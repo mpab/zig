@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    zig build -Dtarget=x86_64-macos
+else
+    zig build
+fi
