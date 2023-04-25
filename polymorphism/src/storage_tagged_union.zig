@@ -8,15 +8,23 @@ pub const Circle = struct {
         x: i32,
         y: i32,
         radius: i32,
-        pub fn init(x: i32, y: i32, radius: i32) Data {
-            return .{ .x = x, .y = y, .radius = radius };
-        }
     };
     data: *Data,
 
-    pub fn new(data: *Data) Shape {
-        return .{ .circle = .{ .data = data } };
-    }
+    pub const Factory = struct {
+        const Mem = std.ArrayList(Circle.Data);
+        mem: Mem,
+
+        pub fn init() Factory {
+            return .{ .mem = Mem.init(std.heap.page_allocator) };
+        }
+
+        pub fn new(self: *Factory, x: i32, y: i32, radius: i32) !Shape {
+            try self.mem.append(.{ .x = x, .y = y, .radius = radius });
+            var data = &self.mem.items[self.mem.items.len - 1];
+            return .{ .circle = .{ .data = data } };
+        }
+    };
 
     pub fn update(self: Circle) void {
         self.data.x += 1;
@@ -35,15 +43,23 @@ pub const Rectangle = struct {
         y: i32,
         width: i32,
         height: i32,
-        pub fn init(x: i32, y: i32, width: i32, height: i32) Data {
-            return .{ .x = x, .y = y, .width = width, .height = height };
-        }
     };
     data: *Data,
 
-    pub fn new(data: *Data) Shape {
-        return .{ .rectangle = .{ .data = data } };
-    }
+    pub const Factory = struct {
+        const Mem = std.ArrayList(Rectangle.Data);
+        mem: Mem,
+
+        pub fn init() Factory {
+            return .{ .mem = Mem.init(std.heap.page_allocator) };
+        }
+
+        pub fn new(self: *Factory, x: i32, y: i32, width: i32, height: i32) !Shape {
+            try self.mem.append(.{ .x = x, .y = y, .width = width, .height = height });
+            var data = &self.mem.items[self.mem.items.len - 1];
+            return .{ .rectangle = .{ .data = data } };
+        }
+    };
 
     pub fn update(self: Rectangle) void {
         self.data.x -= 1;
