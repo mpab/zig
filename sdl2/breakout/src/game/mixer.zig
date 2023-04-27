@@ -1,9 +1,8 @@
 const std = @import("std");
 
-const c = @cImport({
-    @cInclude("SDL.h");
-    @cInclude("SDL_mixer.h");
-});
+const zg = @import("zig-game"); // namespace
+//const Mixer = zg.mixer.Mixer;
+const Sound = zg.mixer.Sound;
 
 pub const ball_bat = @embedFile("./assets/ball_bat.ogg");
 pub const ball_brick = @embedFile("./assets/ball_brick.ogg");
@@ -18,33 +17,9 @@ pub const level_complete = @embedFile("./assets/level_complete.ogg");
 
 const dbg = std.log.debug;
 
-pub const Sound = struct {
-    audio_ptr: *c.Mix_Chunk,
-
-    pub fn init(audio_file: [:0]const u8) !Sound {
-        const audio_rw = c.SDL_RWFromConstMem(
-            @ptrCast(*const anyopaque, audio_file),
-            @intCast(c_int, audio_file.len),
-        ) orelse {
-            c.SDL_Log("Unable to get RWFromConstMem: %s", c.SDL_GetError());
-            return error.SDLInitializationFailed;
-        };
-        defer std.debug.assert(c.SDL_RWclose(audio_rw) == 0);
-
-        var audio_ptr = c.Mix_LoadWAV_RW(audio_rw, 0) orelse {
-            c.SDL_Log("Unable to load audio: %s", c.Mix_GetError());
-            return error.SDLInitializationFailed;
-        };
-
-        return .{ .audio_ptr = audio_ptr };
-    }
-
-    pub fn play(self: Sound) void {
-        _ = c.Mix_PlayChannel(-1, self.audio_ptr, 0);
-    }
-};
-
 pub const Mixer = struct {
+    init_flags: c_int,
+
     ball_bat: Sound,
     ball_brick: Sound,
     ball_wall: Sound,
@@ -57,20 +32,10 @@ pub const Mixer = struct {
     level_complete: Sound,
 
     pub fn init() !Mixer {
-        _ = c.Mix_Init(c.MIX_INIT_OGG);
-        defer c.Mix_Quit();
-
-        if (c.Mix_OpenAudio(
-            c.MIX_DEFAULT_FREQUENCY,
-            c.MIX_DEFAULT_FORMAT,
-            c.MIX_DEFAULT_CHANNELS,
-            1024,
-        ) != 0) {
-            c.SDL_Log("Unable to open audio: %s", c.Mix_GetError());
-            return error.SDLInitializationFailed;
-        }
+        var init_flags = try zg.mixer.Mixer.init();
 
         return .{
+            .init_flags = init_flags,
             .ball_bat = try Sound.init(ball_bat),
             .ball_brick = try Sound.init(ball_brick),
             .ball_wall = try Sound.init(ball_wall),

@@ -48,6 +48,7 @@
   - now uses vcpkg for pulling down SDL dependencies
   - now uses git for pulling down SDL.zig
 - zig-game library
+  - refactored mixer/sound functionality from game to library
   - transparency on textures
   - sprite polymorphism (hacky version)
   - fonts and text (using a bitmap font and pixel-plotting)

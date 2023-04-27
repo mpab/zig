@@ -14,6 +14,7 @@ pub const sdl = @import("sdl-wrapper"); // configured in build.zig
 // import/export sub-modules
 pub const sprite = @import("sprite.zig");
 pub const font = @import("font.zig");
+pub const mixer = @import("mixer.zig");
 pub const util = @import("util.zig");
 pub const time = @import("time.zig");
 pub const color = @import("color.zig");
