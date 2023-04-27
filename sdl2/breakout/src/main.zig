@@ -6,7 +6,6 @@ const sdl = @import("zig-game").sdl;
 const game = @import("game/game.zig");
 
 const SpriteFactory = game.sprite.Factory;
-const ZgSprite = ziggame.sprite.Sprite;
 
 const GameState = enum {
     NEW_GAME,
@@ -80,10 +79,10 @@ const GameContext = struct {
     game_state_ticker: game.time.Ticker,
     bat_ball_debounce_ticker: game.time.Ticker,
     bounds: sdl.Rectangle,
-    animations: ziggame.sprite.Group(ZgSprite) = .{}, // falling brick, score sprite
-    playfield: ziggame.sprite.Group(ZgSprite) = .{},
-    bricks: ziggame.sprite.Group(ZgSprite) = .{},
-    text: ziggame.sprite.Group(ZgSprite) = .{}, // high scores
+    animations: ziggame.sprite.Group(SpriteFactory.Type) = .{}, // falling brick, score sprite
+    playfield: ziggame.sprite.Group(SpriteFactory.Type) = .{},
+    bricks: ziggame.sprite.Group(SpriteFactory.Type) = .{},
+    text: ziggame.sprite.Group(SpriteFactory.Type) = .{}, // high scores
 
     ball_idx: usize = 0,
     ball_start_y: i32 = 0,
@@ -269,7 +268,7 @@ fn draw_screen(gctx: *GameContext) !void {
     try draw_level_lives_score(gctx);
 }
 
-fn handle_ball_bat_collision(gctx: *GameContext, ball: *ZgSprite, bat: *ZgSprite) void {
+fn handle_ball_bat_collision(gctx: *GameContext, ball: *SpriteFactory.Type, bat: *SpriteFactory.Type) void {
     if (gctx.bat_ball_debounce_ticker.counter_ms < 100) {
         // zg.util.log("debounce {}\n", .{gctx.bat_ball_debounce_ticker.counter_ms});
         return;

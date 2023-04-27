@@ -71,6 +71,8 @@ const SpriteImpl = struct {
 };
 
 pub const Factory = struct {
+    pub const Type = ZgSprite;
+
     pub fn new(canvas: ziggame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32) ZgSprite {
         var source: ZgSprite.CanvasOrText = .{
             .canvas = canvas,
