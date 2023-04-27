@@ -260,14 +260,13 @@ fn draw_screen(gctx: *GameContext) !void {
     try draw_level_lives_score(gctx);
 }
 
-fn handle_ball_bat_collision(gctx: *GameContext, ball: *game.sprite.SpriteBase, bat: *game.sprite.SpriteBase) void {
+fn handle_ball_bat_collision(gctx: *GameContext, ball: *ziggame.sprite.Sprite, bat: *ziggame.sprite.Sprite) void {
     if (gctx.bat_ball_debounce_ticker.counter_ms < 100) {
         // zg.util.log("debounce {}\n", .{gctx.bat_ball_debounce_ticker.counter_ms});
         return;
     }
     gctx.bat_ball_debounce_ticker.reset();
     ball.dy = -ball.dy;
-    //gctx.mixer.ball_bat.play();
     bat.sound().play();
 }
 
@@ -292,7 +291,7 @@ fn run_game(gctx: *GameContext) !void {
         ball.dy = -ball.dy;
         var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
         player_ns.score += 10;
-        gctx.mixer.ball_brick.play();
+        moving_brick.sound().play();
 
         if (gctx.bricks.list.items.len == 0) {
             set_game_state(gctx, GameState.LEVEL_COMPLETE);
@@ -591,7 +590,7 @@ fn replace_bricks(gctx: *GameContext) !void {
             var x = @intCast(i32, c * game.constant.BRICK_WIDTH);
             var y = bricks_y_offset + r * game.constant.BRICK_HEIGHT;
             gctx.ball_start_y = y;
-            var brick = game.sprite.SpriteBase.new(canvas, bounds, x, y);
+            var brick = game.sprite.SpriteBase.new_with_sound(canvas, bounds, x, y, gctx.mixer.ball_brick);
             try gctx.bricks.list.append(brick);
             count += 1;
         }
