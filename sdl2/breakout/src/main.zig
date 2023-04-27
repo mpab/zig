@@ -113,11 +113,12 @@ const GameContext = struct {
         );
         gctx.ball_idx = try gctx.playfield.add(ball);
         var bat_canvas = try game.shape.bat(zg);
-        var bat = game.sprite.SpriteBase.new(
+        var bat = game.sprite.SpriteBase.new_with_sound(
             bat_canvas,
             bounds,
             @divTrunc(bounds.width, 2),
             bounds.height - 2 * game.constant.BRICK_HEIGHT,
+            gctx.mixer.ball_bat,
         );
         gctx.bat_idx = try gctx.playfield.add(bat);
         var bottom_border_canvas = try game.shape.filled_rect(
@@ -259,15 +260,15 @@ fn draw_screen(gctx: *GameContext) !void {
     try draw_level_lives_score(gctx);
 }
 
-fn handle_ball_bat_collision(gctx: *GameContext) void {
+fn handle_ball_bat_collision(gctx: *GameContext, ball: *game.sprite.SpriteBase, bat: *game.sprite.SpriteBase) void {
     if (gctx.bat_ball_debounce_ticker.counter_ms < 100) {
         // zg.util.log("debounce {}\n", .{gctx.bat_ball_debounce_ticker.counter_ms});
         return;
     }
     gctx.bat_ball_debounce_ticker.reset();
-    var ball = &gctx.playfield.list.items[gctx.ball_idx];
     ball.dy = -ball.dy;
-    gctx.mixer.ball_bat.play();
+    //gctx.mixer.ball_bat.play();
+    bat.sound().play();
 }
 
 fn run_game(gctx: *GameContext) !void {
@@ -301,7 +302,7 @@ fn run_game(gctx: *GameContext) !void {
 
     // handle bat/ball collision
     if (ziggame.sprite.collide_rect(ball, bat)) {
-        handle_ball_bat_collision(gctx);
+        handle_ball_bat_collision(gctx, ball, bat);
     }
 
     // handle deadly border/ball collision

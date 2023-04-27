@@ -81,6 +81,24 @@ pub const SpriteBase = struct {
         };
     }
 
+    pub fn new_with_sound(canvas: ziggame.Canvas, bounds: sdl.Rectangle, x: i32, y: i32, sound: ziggame.mixer.Sound) ZgSprite {
+        var source: ZgSprite.CanvasOrText = .{
+            .canvas = canvas,
+        };
+
+        return .{
+            .__v_draw = v_draw,
+            .__v_update = v_update,
+            .bounds = bounds,
+            .x = x,
+            .y = y,
+            .width = canvas.width,
+            .height = canvas.height,
+            .source = source,
+            .sound_cue = .{ .sound = sound },
+        };
+    }
+
     fn v_draw(self: ZgSprite, zg: *ZigGame) void {
         zg.renderer.copy(self.canvas().texture, self.position_rect(), self.size_rect()) catch return;
     }
