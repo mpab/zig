@@ -216,6 +216,10 @@ pub const Factory = struct {
                 .sound_cue = .{ .empty = {} },
             };
         }
+
+        pub fn convert(base: *ZgSprite) void {
+            base.__v_update = ScrollingSprite.v_update;
+        }
     };
 };
 
