@@ -3,29 +3,51 @@ const ziggame = @import("zig_game.zig");
 const ZigGame = ziggame.ZigGame;
 const sdl = @import("sdl-wrapper"); // configured in build.zig
 
-pub const ExtendedAttributes = struct {
-    vel: i32,
-    dx: i32,
-    dy: i32,
-    state: i32,
-    string: []const u8,
-};
-
 pub const Sprite = struct {
     // hack for function override
     // TODO: make more idiomatic, or reimplement with a 'property bag' approach using key, value pairs
+
+    pub const CanvasOrText = union(enum) {
+        canvas: ziggame.Canvas,
+        text: []const u8,
+    };
+
+    pub const SoundOrEmpty = union(enum) {
+        sound: ziggame.mixer.Sound,
+        empty: void,
+    };
+
     const Update = *const fn (base: *Sprite) void;
     const Draw = *const fn (base: Sprite, zg: *ZigGame) void;
     __v_update: Update,
     __v_draw: Draw,
 
     // attributes
-    canvas: ziggame.Canvas,
     bounds: sdl.Rectangle,
-    x: i32,
-    y: i32,
+    x: i32 = 0,
+    y: i32 = 0,
+    width: i32,
+    height: i32,
+    vel: i32 = 0,
+    dx: i32 = 0,
+    dy: i32 = 0,
+    state: i32 = 0,
 
-    ext: ExtendedAttributes, // replace with k, v dict of types?
+    // replace with k, v dict of types?
+    source: CanvasOrText,
+    sound_cue: SoundOrEmpty,
+
+    pub fn text(self: Sprite) []const u8 {
+        return self.source.text;
+    }
+
+    pub fn canvas(self: Sprite) ziggame.Canvas {
+        return self.source.canvas;
+    }
+
+    pub fn sound(self: Sprite) ziggame.mixer.Sound {
+        return self.sound_cue.sound;
+    }
 
     pub fn draw(self: Sprite, zg: *ZigGame) void {
         self.__v_draw(self, zg);
@@ -40,18 +62,27 @@ pub const Sprite = struct {
         self.y = y;
     }
 
+    pub fn size_rect(self: Sprite) sdl.Rectangle {
+        return sdl.Rectangle{
+            .x = 0,
+            .y = 0,
+            .width = self.width,
+            .height = self.height,
+        };
+    }
+
     pub fn position_rect(self: Sprite) sdl.Rectangle {
         return sdl.Rectangle{
             .x = self.x,
             .y = self.y,
-            .width = self.canvas.width,
-            .height = self.canvas.height,
+            .width = self.width,
+            .height = self.height,
         };
     }
 };
 
 pub fn rectangle(self: *Sprite) sdl.Rectangle {
-    return sdl.Rectangle{ .x = self.x, .y = self.y, .width = self.canvas.width, .height = self.canvas.height };
+    return sdl.Rectangle{ .x = self.x, .y = self.y, .width = self.width, .height = self.height };
 }
 
 pub fn collide_rect(s1: *Sprite, s2: *Sprite) bool {
