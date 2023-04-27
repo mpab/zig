@@ -597,7 +597,7 @@ fn replace_bricks(gctx: *GameContext) !void {
     var count: i32 = 0;
     var bricks_y_offset: i32 = game.constant.BRICK_HEIGHT * (gctx.difficulty_level + 5);
     var r: i32 = 0;
-    while (r != game.constant.NUM_BRICK_ROWS + 5) : (r += 1) {
+    while (r != game.constant.NUM_BRICK_ROWS) : (r += 1) {
         var canvas = try game.shape.brick(gctx.zg, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, r);
         var c: i32 = 0;
         while (c != game.constant.BRICKS_PER_ROW) : (c += 1) {
