@@ -18,6 +18,10 @@ pub const Rect = struct {
     top: i32,
     right: i32,
     bottom: i32,
+
+    pub fn from_sdl_rect(r: sdl.Rectangle) Rect {
+        return .{ .left = r.x, .top = r.y, .right = r.x + r.width, .bottom = r.y + r.height };
+    }
 };
 
 pub const FontInfo = struct {

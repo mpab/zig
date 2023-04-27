@@ -5,6 +5,9 @@ const ZigGame = ziggame.ZigGame; // context
 const sdl = @import("zig-game").sdl;
 const game = @import("game/game.zig");
 
+const SpriteFactory = game.sprite.Factory;
+const ZgSprite = ziggame.sprite.Sprite;
+
 const GameState = enum {
     NEW_GAME,
     ATTRACT,
@@ -77,10 +80,10 @@ const GameContext = struct {
     game_state_ticker: game.time.Ticker,
     bat_ball_debounce_ticker: game.time.Ticker,
     bounds: sdl.Rectangle,
-    animations: ziggame.sprite.Group(ziggame.sprite.Sprite) = .{}, // falling brick, score sprite
-    playfield: ziggame.sprite.Group(ziggame.sprite.Sprite) = .{},
-    bricks: ziggame.sprite.Group(ziggame.sprite.Sprite) = .{},
-    text: ziggame.sprite.Group(ziggame.sprite.Sprite) = .{}, // high scores
+    animations: ziggame.sprite.Group(ZgSprite) = .{}, // falling brick, score sprite
+    playfield: ziggame.sprite.Group(ZgSprite) = .{},
+    bricks: ziggame.sprite.Group(ZgSprite) = .{},
+    text: ziggame.sprite.Group(ZgSprite) = .{}, // high scores
 
     ball_idx: usize = 0,
     ball_start_y: i32 = 0,
@@ -101,7 +104,7 @@ const GameContext = struct {
 
         var bounds = gctx.bounds;
         var ball_canvas = try game.shape.ball(zg, game.constant.BALL_RADIUS);
-        var ball = game.sprite.BouncingSprite.new(
+        var ball = SpriteFactory.Bouncing.new(
             ball_canvas,
             bounds,
             -100,
@@ -113,7 +116,7 @@ const GameContext = struct {
         );
         gctx.ball_idx = try gctx.playfield.add(ball);
         var bat_canvas = try game.shape.bat(zg);
-        var bat = game.sprite.SpriteBase.new_with_sound(
+        var bat = SpriteFactory.new_with_sound(
             bat_canvas,
             bounds,
             @divTrunc(bounds.width, 2),
@@ -127,7 +130,7 @@ const GameContext = struct {
             4,
             game.color.red,
         );
-        var deadly_border = game.sprite.SpriteBase.new_with_sound(
+        var deadly_border = SpriteFactory.new_with_sound(
             bottom_border_canvas,
             bounds,
             0,
@@ -266,7 +269,7 @@ fn draw_screen(gctx: *GameContext) !void {
     try draw_level_lives_score(gctx);
 }
 
-fn handle_ball_bat_collision(gctx: *GameContext, ball: *ziggame.sprite.Sprite, bat: *ziggame.sprite.Sprite) void {
+fn handle_ball_bat_collision(gctx: *GameContext, ball: *ZgSprite, bat: *ZgSprite) void {
     if (gctx.bat_ball_debounce_ticker.counter_ms < 100) {
         // zg.util.log("debounce {}\n", .{gctx.bat_ball_debounce_ticker.counter_ms});
         return;
@@ -286,18 +289,19 @@ fn run_game(gctx: *GameContext) !void {
     // handle brick/ball collision
     var result = gctx.bricks.collision(ball);
     if (result.collided) {
-        var moving_brick = game.sprite.DisappearingMovingSprite.clone(gctx.bricks.remove(result.index));
-        moving_brick.dy = 1;
-        moving_brick.vel = 1;
-        _ = try gctx.animations.add(moving_brick);
+        var brick = gctx.bricks.remove(result.index);
+        SpriteFactory.Moving.convert(&brick);
+        brick.dy = 1;
+        brick.vel = 1;
+        _ = try gctx.animations.add(brick);
 
-        var moving_text = try game.sprite.DisappearingMovingSprite.text("+10", moving_brick.bounds, moving_brick.x, moving_brick.y, 1, 0, -1);
+        var moving_text = try SpriteFactory.Moving.text("+10", brick.bounds, brick.x, brick.y, 1, 0, -1);
         _ = try gctx.animations.add(moving_text);
 
         ball.dy = -ball.dy;
         var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
         player_ns.score += 10;
-        moving_brick.sound().play();
+        brick.sound().play();
 
         if (gctx.bricks.list.items.len == 0) {
             set_game_state(gctx, GameState.LEVEL_COMPLETE);
@@ -550,7 +554,9 @@ fn replace_high_scores(gctx: *GameContext) !void {
     var vel: i32 = 1;
     var pos = get_screen_center(gctx);
     var tgrad: game.color.DualGradient = .{ .start = game.color.MIDBLUE_TO_LIGHTBLUE_GRADIENT, .end = game.color.RED_TO_ORANGE_GRADIENT };
-    var title = try game.sprite.ScrollingSprite.text_dual_gradient(gctx.zg, "Today's High Scores", tgrad, gctx.bounds, pos.x, pos.y, vel, 0, -1);
+    var title = try SpriteFactory.Scrolling.text_dual_gradient(gctx.zg, "Today's High Scores", tgrad, gctx.bounds, pos.x, pos.y, vel, 0, -1);
+    //var tgrad: game.color.Gradient = game.color.RED_TO_ORANGE_GRADIENT;
+    //var title = try SpriteFactory.Scrolling.text_gradient(gctx.zg, "Today's High Scores", tgrad, gctx.bounds, pos.x, pos.y, vel, 0, -1);
     title.x -= title.canvas().width >> 1;
     _ = try gctx.text.add(title);
 
@@ -563,7 +569,7 @@ fn replace_high_scores(gctx: *GameContext) !void {
     for (gctx.scores.items) |_| {
         if (idx < PLAYER_SCORE_IDX) {
             //var score_text = try std.fmt.allocPrint(std.heap.page_allocator, "{s}    {}", .{ ns.name, ns.score });
-            var name_sprite = try game.sprite.ScrollingSprite.text_dual_gradient(gctx.zg, &gctx.scores.items[idx].name, sgrad, gctx.bounds, pos.x - scaled_char_wh * spacing, pos.y + yoff, vel, 0, -1);
+            var name_sprite = try SpriteFactory.Scrolling.text_dual_gradient(gctx.zg, &gctx.scores.items[idx].name, sgrad, gctx.bounds, pos.x - scaled_char_wh * spacing, pos.y + yoff, vel, 0, -1);
             _ = try gctx.text.add(name_sprite);
 
             var score_text = try std.fmt.allocPrint(std.heap.page_allocator, "{}", .{gctx.scores.items[idx].score});
@@ -572,7 +578,7 @@ fn replace_high_scores(gctx: *GameContext) !void {
             var rhs = score_max_chars - score_text_len;
             var score_x = pos.x + scaled_char_wh * rhs;
             //dbg("{}, {}, {}: {}\n", .{ score_max_chars, score_text_len, rhs, score_x });
-            var score_sprite = try game.sprite.ScrollingSprite.text_dual_gradient(gctx.zg, score_text, sgrad, gctx.bounds, score_x, pos.y + yoff, vel, 0, -1);
+            var score_sprite = try SpriteFactory.Scrolling.text_dual_gradient(gctx.zg, score_text, sgrad, gctx.bounds, score_x, pos.y + yoff, vel, 0, -1);
             _ = try gctx.text.add(score_sprite);
             yoff = yoff + scaled_char_wh;
         }
@@ -596,7 +602,7 @@ fn replace_bricks(gctx: *GameContext) !void {
             var x = @intCast(i32, c * game.constant.BRICK_WIDTH);
             var y = bricks_y_offset + r * game.constant.BRICK_HEIGHT;
             gctx.ball_start_y = y;
-            var brick = game.sprite.SpriteBase.new_with_sound(canvas, bounds, x, y, gctx.mixer.ball_brick);
+            var brick = SpriteFactory.new_with_sound(canvas, bounds, x, y, gctx.mixer.ball_brick);
             try gctx.bricks.list.append(brick);
             count += 1;
         }
