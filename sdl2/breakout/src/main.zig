@@ -127,7 +127,13 @@ const GameContext = struct {
             4,
             game.color.red,
         );
-        var deadly_border = game.sprite.SpriteBase.new(bottom_border_canvas, bounds, 0, bounds.height - 4);
+        var deadly_border = game.sprite.SpriteBase.new_with_sound(
+            bottom_border_canvas,
+            bounds,
+            0,
+            bounds.height - 4,
+            gctx.mixer.life_lost,
+        );
         gctx.deadly_border_idx = try gctx.playfield.add(deadly_border);
 
         // 1st 3 are the high scores, the last is the current player score
@@ -307,7 +313,7 @@ fn run_game(gctx: *GameContext) !void {
     // handle deadly border/ball collision
     if (ziggame.sprite.collide_rect(ball, deadly_border)) {
         set_game_state(gctx, GameState.LIFE_LOST);
-        gctx.mixer.life_lost.play();
+        deadly_border.sound().play();
     }
 
     if (gctx.game_state_ticker.counter_ms > 20000) { // speed up the ball
