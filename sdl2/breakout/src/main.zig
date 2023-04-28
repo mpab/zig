@@ -205,7 +205,7 @@ fn run_new_game(gctx: *GameContext) !void {
     gctx.lives = 3;
     gctx.game_level = 1;
     gctx.game_difficulty = difficulty(gctx.game_level);
-    var player_ns = gctx.scores.items[PLAYER_SCORE_IDX];
+    var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
     player_ns.score = 0;
     player_ns.set_name("   ");
     gctx.player_score_edit_pos = 0;
@@ -410,7 +410,6 @@ fn run_game_over(gctx: *GameContext) !void {
     }
 }
 
-// BUG: if same score is achieved as a previous player, the old players name is shown
 fn run_game_over_high_score(gctx: *GameContext) !void {
     var point = get_screen_center(gctx);
     if (gctx.game_state_ticker.counter_ms <= 2000) {
@@ -448,7 +447,6 @@ fn compareNameScoresAscending(context: void, a: NameScore, b: NameScore) bool {
     }
 }
 
-// BUG: if same score is achieved as a previous player, the old players name is shown
 fn run_enter_high_score(gctx: *GameContext) !void {
     var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
     var player_name = &player_ns.name;
