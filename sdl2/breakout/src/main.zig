@@ -90,6 +90,7 @@ const GameContext = struct {
     deadly_border_idx: usize = 0,
 
     input: InputEvents = .{},
+    stats_hash: usize = 0,
 
     pub fn init(zg: *ZigGame, mixer: *game.mixer.Mixer, font: *game.font.Font) !GameContext {
         var gctx: GameContext = .{
@@ -208,6 +209,7 @@ fn run_new_game(gctx: *GameContext) !void {
     player_ns.score = 0;
     player_ns.set_name("   ");
     gctx.player_score_edit_pos = 0;
+    gctx.animations.destroy(); // run once per level or at game start as bricks share a texture
     try replace_bricks(gctx);
     set_game_state(gctx, GameState.GET_READY);
 }
@@ -408,6 +410,7 @@ fn run_game_over(gctx: *GameContext) !void {
     }
 }
 
+// BUG: if same score is achieved as a previous player, the old players name is shown
 fn run_game_over_high_score(gctx: *GameContext) !void {
     var point = get_screen_center(gctx);
     if (gctx.game_state_ticker.counter_ms <= 2000) {
@@ -445,6 +448,7 @@ fn compareNameScoresAscending(context: void, a: NameScore, b: NameScore) bool {
     }
 }
 
+// BUG: if same score is achieved as a previous player, the old players name is shown
 fn run_enter_high_score(gctx: *GameContext) !void {
     var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
     var player_name = &player_ns.name;
@@ -565,7 +569,7 @@ fn run_game_state(gctx: *GameContext) !bool {
 }
 
 fn replace_high_scores(gctx: *GameContext) !void {
-    gctx.text.list.clearAndFree();
+    gctx.text.destroy();
     var vel: i32 = 1;
     var pos = get_screen_center(gctx);
     var tgrad: game.color.DualGradient = .{ .start = game.color.MIDBLUE_TO_LIGHTBLUE_GRADIENT, .end = game.color.RED_TO_ORANGE_GRADIENT };
@@ -629,15 +633,50 @@ fn replace_bricks(gctx: *GameContext) !void {
 }
 
 fn stats(gctx: *GameContext) void {
-    var num_inactive: i32 = 0;
+    var ani_inactive: usize = 0;
     for (gctx.animations.list.items) |item| {
         var data = item.get();
         if (data.state < 0) {
-            num_inactive += 1;
+            ani_inactive += 1;
         }
     }
 
-    dbg("animations - count: {}, inactive: {}", .{ gctx.animations.list.items.len, num_inactive });
+    var bri_inactive: usize = 0;
+    for (gctx.bricks.list.items) |item| {
+        var data = item.get();
+        if (data.state < 0) {
+            bri_inactive += 1;
+        }
+    }
+
+    var tex_inactive: usize = 0;
+    for (gctx.text.list.items) |item| {
+        var data = item.get();
+        if (data.state < 0) {
+            tex_inactive += 1;
+        }
+    }
+
+    var pla_inactive: usize = 0;
+    for (gctx.playfield.list.items) |item| {
+        var data = item.get();
+        if (data.state < 0) {
+            pla_inactive += 1;
+        }
+    }
+
+    var stats_hash: usize = 0;
+    stats_hash += ani_inactive + (bri_inactive << 8) + (tex_inactive << 16) + (pla_inactive << 24);
+    stats_hash += (gctx.animations.list.items.len << 32) + (gctx.bricks.list.items.len << 40) + (gctx.text.list.items.len << 48) + (gctx.playfield.list.items.len << 56);
+
+    if (stats_hash != gctx.stats_hash) {
+        gctx.stats_hash = stats_hash;
+        dbg("animations - count: {}, inactive: {}", .{ gctx.animations.list.items.len, ani_inactive });
+        dbg("bricks - count: {}, inactive: {}", .{ gctx.bricks.list.items.len, bri_inactive });
+        dbg("text - count: {}, inactive: {}", .{ gctx.text.list.items.len, tex_inactive });
+        dbg("playfield - count: {}, inactive: {}", .{ gctx.playfield.list.items.len, pla_inactive });
+        dbg("--------------------------------------", .{});
+    }
 }
 
 pub fn main() !void {
