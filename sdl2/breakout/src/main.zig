@@ -115,12 +115,10 @@ const GameContext = struct {
         );
         gctx.ball_idx = try gctx.playfield.add(ball);
         var bat_canvas = try game.shape.bat(zg);
-        var bat = SpriteFactory.new_with_sound(
+        var bat = SpriteFactory.new(
             bat_canvas,
-            bounds,
             @divTrunc(bounds.width, 2),
             bounds.height - 2 * game.constant.BRICK_HEIGHT,
-            gctx.mixer.ball_bat,
         );
         gctx.bat_idx = try gctx.playfield.add(bat);
         var bottom_border_canvas = try game.shape.filled_rect(
@@ -129,12 +127,10 @@ const GameContext = struct {
             4,
             game.color.red,
         );
-        var deadly_border = SpriteFactory.new_with_sound(
+        var deadly_border = SpriteFactory.new(
             bottom_border_canvas,
-            bounds,
             0,
             bounds.height - 4,
-            gctx.mixer.life_lost,
         );
         gctx.deadly_border_idx = try gctx.playfield.add(deadly_border);
 
@@ -176,9 +172,10 @@ fn process_mouse_motion(gctx: *GameContext) void {
     }
 
     var bat = &gctx.playfield.list.items[gctx.bat_idx];
-    var batx = gctx.input.ie_mouse_motion.val.event.mouse_motion.x - @divTrunc(bat.width, 2);
-    var baty = bat.y;
-    bat.move_abs(batx, baty);
+    var data = bat.get();
+    var batx = gctx.input.ie_mouse_motion.val.event.mouse_motion.x - @divTrunc(data.width, 2);
+    data.x = batx;
+    bat.set(data);
 }
 
 fn set_game_state(gctx: *GameContext, state: GameState) void {
@@ -189,11 +186,13 @@ fn set_game_state(gctx: *GameContext, state: GameState) void {
 fn reset_ball(gctx: *GameContext) void {
     var pos = get_screen_center(gctx);
     var ball = &gctx.playfield.list.items[gctx.ball_idx];
-    ball.x = pos.x;
-    ball.y = gctx.ball_start_y;
-    ball.vel = gctx.game_difficulty + 3;
-    ball.dx = 1;
-    ball.dy = 1;
+    var data = ball.get();
+    data.x = pos.x;
+    data.y = gctx.ball_start_y;
+    data.vel = gctx.game_difficulty + 3;
+    data.dx = 1;
+    data.dy = 1;
+    ball.set(data);
 }
 
 fn difficulty(game_level: u16) u16 {
@@ -205,7 +204,7 @@ fn run_new_game(gctx: *GameContext) !void {
     gctx.lives = 3;
     gctx.game_level = 1;
     gctx.game_difficulty = difficulty(gctx.game_level);
-    var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
+    var player_ns = gctx.scores.items[PLAYER_SCORE_IDX];
     player_ns.score = 0;
     player_ns.set_name("   ");
     gctx.player_score_edit_pos = 0;
@@ -236,7 +235,7 @@ fn run_show_high_scores(gctx: *GameContext) !void {
 }
 
 fn draw_level_lives_score(gctx: *GameContext) !void {
-    var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
+    var player_ns = gctx.scores.items[PLAYER_SCORE_IDX];
     const string = try std.fmt.allocPrint(
         std.heap.page_allocator,
         "Level: {d} Lives: {d} Score: {d}",
@@ -269,13 +268,21 @@ fn draw_screen(gctx: *GameContext) !void {
 }
 
 fn handle_ball_bat_collision(gctx: *GameContext, ball: *SpriteFactory.Type, bat: *SpriteFactory.Type) void {
+    _ = bat;
     if (gctx.bat_ball_debounce_ticker.counter_ms < 100) {
         // zg.util.log("debounce {}\n", .{gctx.bat_ball_debounce_ticker.counter_ms});
         return;
     }
     gctx.bat_ball_debounce_ticker.reset();
-    ball.dy = -ball.dy;
-    bat.sound().play();
+
+    var ball_data = ball.get();
+    ball_data.dy = -ball_data.dy;
+    ball.set(ball_data);
+    gctx.mixer.ball_bat.play();
+}
+
+fn collision(s1: *SpriteFactory.Type, s2: *SpriteFactory.Type) bool {
+    return s1.position_rect().hasIntersection(s2.position_rect());
 }
 
 fn run_game(gctx: *GameContext) !void {
@@ -288,19 +295,25 @@ fn run_game(gctx: *GameContext) !void {
     // handle brick/ball collision
     var result = gctx.bricks.collision(ball);
     if (result.collided) {
-        var brick = gctx.bricks.remove(result.index);
-        SpriteFactory.Moving.convert(&brick);
-        brick.dy = 1;
-        brick.vel = 1;
-        _ = try gctx.animations.add(brick);
+        var brick = result.item.?;
+        var moving_brick = SpriteFactory.Moving.copy(brick);
+        var brick_data = moving_brick.get();
+        brick_data.dy = 1;
+        brick_data.vel = 1;
+        moving_brick.set(brick_data);
+        _ = try gctx.animations.add(moving_brick);
 
-        var moving_text = try SpriteFactory.Moving.text("+10", brick.bounds, brick.x, brick.y, 1, 0, -1);
+        var moving_text = try SpriteFactory.Moving.text(gctx.zg, "+10", brick_data.x, brick_data.y, 1, 0, -1);
         _ = try gctx.animations.add(moving_text);
 
-        ball.dy = -ball.dy;
+        _ = gctx.bricks.remove(result.index);
+
+        var ball_data = ball.get();
+        ball_data.dy = -ball_data.dy;
+        ball.set(ball_data);
         var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
         player_ns.score += 10;
-        brick.sound().play();
+        gctx.mixer.ball_brick.play();
 
         if (gctx.bricks.list.items.len == 0) {
             set_game_state(gctx, GameState.LEVEL_COMPLETE);
@@ -309,20 +322,22 @@ fn run_game(gctx: *GameContext) !void {
     }
 
     // handle bat/ball collision
-    if (ziggame.sprite.collide_rect(ball, bat)) {
+    if (collision(ball, bat)) {
         handle_ball_bat_collision(gctx, ball, bat);
     }
 
     // handle deadly border/ball collision
-    if (ziggame.sprite.collide_rect(ball, deadly_border)) {
+    if (collision(ball, deadly_border)) {
         set_game_state(gctx, GameState.LIFE_LOST);
-        deadly_border.sound().play();
+        gctx.mixer.life_lost.play();
     }
 
     if (gctx.game_state_ticker.counter_ms > 20000) { // speed up the ball
         gctx.game_state_ticker.reset();
-        if (ball.vel < 20) { // maximum speed clamp
-            ball.vel += 1;
+        var ball_data = ball.get();
+        if (ball_data.vel < 20) { // maximum speed clamp
+            ball_data.vel += 1;
+            ball.set(ball_data);
         }
     }
 }
@@ -341,7 +356,7 @@ fn run_life_lost(gctx: *GameContext) !void {
             set_game_state(gctx, GameState.GET_READY);
             gctx.mixer.get_ready.play();
         } else {
-            var player_ns = &gctx.scores.items[PLAYER_SCORE_IDX];
+            var player_ns = gctx.scores.items[PLAYER_SCORE_IDX];
             var idx: usize = 0;
             var high_score = false;
             for (gctx.scores.items) |ns| {
@@ -556,7 +571,9 @@ fn replace_high_scores(gctx: *GameContext) !void {
     var title = try SpriteFactory.Scrolling.text_dual_gradient(gctx.zg, "Today's High Scores", tgrad, gctx.bounds, pos.x, pos.y, vel, 0, -1);
     //var tgrad: game.color.Gradient = game.color.RED_TO_ORANGE_GRADIENT;
     //var title = try SpriteFactory.Scrolling.text_gradient(gctx.zg, "Today's High Scores", tgrad, gctx.bounds, pos.x, pos.y, vel, 0, -1);
-    title.x -= title.canvas().width >> 1;
+    var title_data = title.get();
+    title_data.x -= title_data.width >> 1;
+    title.set(title_data);
     _ = try gctx.text.add(title);
 
     var sgrad: game.color.DualGradient = .{ .start = game.color.ORANGE_TO_GOLD_GRADIENT, .end = game.color.GOLD_TO_ORANGE_GRADIENT };
@@ -588,6 +605,7 @@ fn replace_high_scores(gctx: *GameContext) !void {
 fn replace_bricks(gctx: *GameContext) !void {
     gctx.bricks.list.clearAndFree();
     var bounds = gctx.bounds;
+    _ = bounds;
     //testing
     // var canvas = try game.shape.brick(gctx.zg, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, 0);
     // try gctx.bricks.list.append(game.sprite.BasicSprite.new(canvas, bounds, 350, 200));
@@ -601,7 +619,7 @@ fn replace_bricks(gctx: *GameContext) !void {
             var x = @intCast(i32, c * game.constant.BRICK_WIDTH);
             var y = bricks_y_offset + r * game.constant.BRICK_HEIGHT;
             gctx.ball_start_y = y;
-            var brick = SpriteFactory.new_with_sound(canvas, bounds, x, y, gctx.mixer.ball_brick);
+            var brick = SpriteFactory.new(canvas, x, y);
             try gctx.bricks.list.append(brick);
             count += 1;
         }
