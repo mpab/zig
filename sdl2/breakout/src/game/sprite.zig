@@ -22,12 +22,22 @@ pub const Sprite = union(enum) { // Facade
         dx: i32 = 0, // TODO: use polar vector
         dy: i32 = 0,
         vel: i32 = 0,
+        state: i32 = 0,
     };
 
     basic: BasicSprite,
     bouncing: BouncingSprite,
     moving: MovingSprite,
     scrolling: ScrollingSprite,
+
+    pub fn destroy(self: *Sprite) void {
+        switch (self.*) {
+            .basic => |*s| s.destroy(),
+            .bouncing => |*s| s.destroy(),
+            .moving => |*s| s.destroy(),
+            .scrolling => |*s| s.destroy(),
+        }
+    }
 
     pub fn get(self: Sprite) Data {
         var d: Data = .{};
@@ -37,6 +47,7 @@ pub const Sprite = union(enum) { // Facade
                 d.y = s.y;
                 d.width = s.width;
                 d.height = s.height;
+                d.state = s.state;
             },
             .bouncing => |s| {
                 d.x = s.x;
@@ -46,6 +57,7 @@ pub const Sprite = union(enum) { // Facade
                 d.dx = s.dx;
                 d.dy = s.dy;
                 d.vel = s.vel;
+                d.state = s.state;
             },
             .moving => |s| {
                 d.x = s.x;
@@ -55,6 +67,7 @@ pub const Sprite = union(enum) { // Facade
                 d.dx = s.dx;
                 d.dy = s.dy;
                 d.vel = s.vel;
+                d.state = s.state;
             },
             .scrolling => |s| {
                 d.x = s.x;
@@ -64,6 +77,7 @@ pub const Sprite = union(enum) { // Facade
                 d.dx = s.dx;
                 d.dy = s.dy;
                 d.vel = s.vel;
+                d.state = s.state;
             },
         }
         return d;
@@ -71,11 +85,12 @@ pub const Sprite = union(enum) { // Facade
 
     pub fn set(self: *Sprite, d: Data) void {
         switch (self.*) {
-            .basic => |*basic| {
-                basic.x = d.x;
-                basic.y = d.y;
-                basic.width = d.width;
-                basic.height = d.height;
+            .basic => |*s| {
+                s.x = d.x;
+                s.y = d.y;
+                s.width = d.width;
+                s.height = d.height;
+                s.state = d.state;
             },
             .bouncing => |*s| {
                 s.x = d.x;
@@ -85,6 +100,7 @@ pub const Sprite = union(enum) { // Facade
                 s.dx = d.dx;
                 s.dy = d.dy;
                 s.vel = d.vel;
+                s.state = d.state;
             },
             .moving => |*s| {
                 s.x = d.x;
@@ -94,6 +110,7 @@ pub const Sprite = union(enum) { // Facade
                 s.dx = d.dx;
                 s.dy = d.dy;
                 s.vel = d.vel;
+                s.state = d.state;
             },
             .scrolling => |*s| {
                 s.x = d.x;
@@ -103,6 +120,7 @@ pub const Sprite = union(enum) { // Facade
                 s.dx = d.dx;
                 s.dy = d.dy;
                 s.vel = d.vel;
+                s.state = d.state;
             },
         }
     }
@@ -161,6 +179,10 @@ const BasicSprite = struct {
     height: i32,
     canvas: ziggame.Canvas,
     state: i32 = 0,
+
+    fn destroy(self: *Self) void {
+        self.canvas.texture.destroy();
+    }
 
     fn update(self: *Self) void {
         _ = self;
@@ -319,10 +341,6 @@ pub const Factory = struct {
                 .width = canvas.width,
                 .height = canvas.height,
             } };
-        }
-
-        pub fn convert(base: *ZgSprite) void {
-            base.__v_update = ScrollingSprite.v_update;
         }
     };
 };

@@ -17,6 +17,10 @@ pub const BouncingSprite = struct {
     sound: ziggame.mixer.Sound,
     state: i32 = 0,
 
+    pub fn destroy(self: *Self) void {
+        self.canvas.texture.destroy();
+    }
+
     pub fn update(self: *Self) void {
         if (self.state < 0) return; // termination state < 0
         self.x += self.dx * self.vel;

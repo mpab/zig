@@ -423,6 +423,7 @@ fn run_next_level(gctx: *GameContext) !void {
     gctx.game_level += 1;
     set_game_state(gctx, GameState.GET_READY);
     gctx.mixer.get_ready.play();
+    gctx.animations.destroy(); // run once per level as bricks share a texture
     try replace_bricks(gctx);
 }
 
@@ -603,12 +604,11 @@ fn replace_high_scores(gctx: *GameContext) !void {
 }
 
 fn replace_bricks(gctx: *GameContext) !void {
-    gctx.bricks.list.clearAndFree();
-    var bounds = gctx.bounds;
-    _ = bounds;
+    gctx.bricks.destroy();
+
     //testing
     // var canvas = try game.shape.brick(gctx.zg, game.constant.BRICK_WIDTH, game.constant.BRICK_HEIGHT, 0);
-    // try gctx.bricks.list.append(game.sprite.BasicSprite.new(canvas, bounds, 350, 200));
+    // try gctx.bricks.list.append(SpriteFactory.new(canvas, 350, 200));
     var count: i32 = 0;
     var bricks_y_offset: i32 = game.constant.BRICK_HEIGHT * (gctx.game_difficulty + 5);
     var r: i32 = 0;
@@ -626,6 +626,18 @@ fn replace_bricks(gctx: *GameContext) !void {
     }
 
     gctx.ball_start_y += game.constant.BRICK_HEIGHT;
+}
+
+fn stats(gctx: *GameContext) void {
+    var num_inactive: i32 = 0;
+    for (gctx.animations.list.items) |item| {
+        var data = item.get();
+        if (data.state < 0) {
+            num_inactive += 1;
+        }
+    }
+
+    dbg("animations - count: {}, inactive: {}", .{ gctx.animations.list.items.len, num_inactive });
 }
 
 pub fn main() !void {
@@ -646,6 +658,7 @@ pub fn main() !void {
         running = try run_game_state(&gctx);
         try draw_screen(&gctx);
         gctx.zg.renderer.present();
+        //stats(&gctx);
     }
 
     ziggame.quit();

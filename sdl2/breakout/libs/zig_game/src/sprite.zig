@@ -13,6 +13,15 @@ pub fn Group(comptime Type: type) type {
         pub const CollectionArrayList = std.ArrayList(Type);
         list: CollectionArrayList = CollectionArrayList.init(std.heap.page_allocator),
 
+        pub fn destroy(self: *Self) void {
+            var idx: usize = 0;
+            while (idx != self.list.items.len) : (idx += 1) {
+                var s = &self.list.items[idx];
+                s.destroy();
+            }
+            self.list.clearAndFree();
+        }
+
         pub fn add(self: *Self, item: Type) !usize {
             try self.list.append(item);
             return self.list.items.len - 1;
