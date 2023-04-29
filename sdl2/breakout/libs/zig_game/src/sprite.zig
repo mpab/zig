@@ -45,12 +45,6 @@ pub fn Group(comptime Type: type) type {
             }
         }
 
-        pub fn rectangle(self: Self, context: *Context) void {
-            for (self.list.items) |item| {
-                item.draw(context);
-            }
-        }
-
         pub fn collision(self: Self, s1: *Type) CollisionResult {
             var idx: usize = 0;
             while (idx != self.list.items.len) : (idx += 1) {
