@@ -20,20 +20,37 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     b.installArtifact(exe);
 
-    const vcpkg_root = "./vcpkg_installed/x64-windows";
-    exe.addIncludePath(vcpkg_root ++ "/include/SDL2");
-    exe.addLibraryPath(vcpkg_root ++ "/lib");
+    var try_vckpg: bool = true;
 
-    var source_path = vcpkg_root ++ "/bin";
-    var dest_path = "./bin";
-    installFiles(b, source_path, dest_path, &.{
-        "ogg.dll",
-        "SDL2_mixer.dll",
-        "SDL2_ttf.dll",
-        "SDL2.dll",
-        "vorbis.dll",
-        "vorbisfile.dll",
-    });
+    // NOTE: this is deliberate, to handle windows + git bash, as path concatenation is broken
+    if (exe.target.isWindows()) {
+        try_vckpg = false;
+        const vcpkg_root = "./vcpkg_installed/x64-windows";
+        exe.addIncludePath(vcpkg_root ++ "/include");
+        exe.addLibraryPath(vcpkg_root ++ "/lib");
+        var source_path = vcpkg_root ++ "/bin";
+        var dest_path = "./bin";
+        installFiles(b, source_path, dest_path, &.{
+            "ogg.dll",
+            "SDL2_mixer.dll",
+            "SDL2_ttf.dll",
+            "SDL2.dll",
+            "vorbis.dll",
+            "vorbisfile.dll",
+        });
+    }
+
+    // ...and also here - brew installation of vckpg not detected
+    if (exe.target.isDarwin()) {
+        try_vckpg = false;
+        const vcpkg_root = "./vcpkg_installed/x64-osx";
+        exe.addIncludePath(vcpkg_root ++ "/include");
+        exe.addLibraryPath(vcpkg_root ++ "/lib");
+    }
+
+    if (try_vckpg) {
+        exe.addVcpkgPaths(.static) catch @panic("vcpkg not found");
+    }
 
     exe.linkSystemLibrary("sdl2");
     exe.linkSystemLibrary("sdl2_mixer");
