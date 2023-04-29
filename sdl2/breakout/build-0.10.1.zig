@@ -33,10 +33,11 @@ pub fn build(b: *std.build.Builder) void {
     exe.linkLibC();
     exe.install();
 
-    exe.addVcpkgPaths(.dynamic) catch @panic("vcpkg not found");
+    var try_vckpg: bool = true;
 
     // NOTE: this is deliberate, to handle windows + git bash, as path concatenation is broken
     if (exe.target.isWindows()) {
+        try_vckpg = false;
         const vcpkg_root = "./vcpkg_installed/x64-windows";
         exe.addIncludePath(vcpkg_root ++ "/include");
         exe.addLibraryPath(vcpkg_root ++ "/lib");
@@ -50,6 +51,18 @@ pub fn build(b: *std.build.Builder) void {
             "vorbis.dll",
             "vorbisfile.dll",
         });
+    }
+
+    // ...and also here - brew installation of vckpg not detected
+    if (exe.target.isDarwin()) {
+        try_vckpg = false;
+        const vcpkg_root = "./vcpkg_installed/x64-osx";
+        exe.addIncludePath(vcpkg_root ++ "/include");
+        exe.addLibraryPath(vcpkg_root ++ "/lib");
+    }
+
+    if (try_vckpg) {
+        exe.addVcpkgPaths(.static) catch @panic("vcpkg not found");
     }
 
     exe.linkSystemLibrary("sdl2");
