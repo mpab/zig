@@ -1,5 +1,5 @@
 const c = @cImport({
-    @cInclude("SDL.h");
+    @cInclude("SDL2/SDL.h");
 });
 
 pub fn get_ticks() u64 {

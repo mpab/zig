@@ -3,8 +3,8 @@ const dbg = std.log.debug;
 
 // TODO: replace with module in build file
 pub const c = @cImport({
-    @cInclude("SDL.h");
-    @cInclude("SDL_ttf.h");
+    @cInclude("SDL2/SDL.h");
+    @cInclude("SDL2/SDL_ttf.h");
 });
 //pub const c = @import("sdl-native");
 
@@ -45,8 +45,6 @@ pub const FontInfo = _type.FontInfo;
 pub const ZigGame = struct {
     window: sdl.Window,
     renderer: sdl.Renderer,
-    //surface: sdl.Surface,
-    //texture: sdl.Texture,
     format: sdl.PixelFormatEnum,
     size: sdl.Renderer.OutputSize,
     font_scaling: u8 = 1,
@@ -64,6 +62,7 @@ pub const ZigGame = struct {
         var format = sdl.PixelFormatEnum.argb8888;
         if (window.getSurface()) |surface| {
             var texture = sdl.createTextureFromSurface(renderer, surface) catch |err| return err;
+            defer texture.destroy();
             var info = texture.query() catch |err| return err;
             format = info.format;
         } else |_| {

@@ -7,8 +7,8 @@ const color = @import("color.zig");
 const constant = @import("constant.zig");
 
 pub const c = @cImport({
-    @cInclude("SDL.h");
-    @cInclude("SDL_ttf.h");
+    @cInclude("SDL2/SDL.h");
+    @cInclude("SDL2/SDL_ttf.h");
 });
 
 const font_file = @embedFile("./assets/arcade-legacy.ttf");

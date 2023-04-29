@@ -1,8 +1,8 @@
 const std = @import("std");
 
 const c = @cImport({
-    @cInclude("SDL.h");
-    @cInclude("SDL_mixer.h");
+    @cInclude("SDL2/SDL.h");
+    @cInclude("SDL2/SDL_mixer.h");
 });
 
 pub const Sound = struct {

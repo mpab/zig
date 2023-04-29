@@ -1,6 +1,20 @@
 const std = @import("std");
+const dbg = std.log.debug;
 
 // zig version 0.10.1 build file
+
+const allocator = std.heap.page_allocator;
+
+fn concat(one: []const u8, two: []const u8) ![]u8 {
+    var str = try std.fmt.allocPrint(allocator, "{s}{s}", .{ one, two });
+    return str;
+}
+
+fn free(str: []u8) void {
+    allocator.free(str);
+}
+
+const fs = std.fs;
 
 pub fn build(b: *std.build.Builder) void {
     // Standard target options allows the person running `zig build` to choose
@@ -19,19 +33,25 @@ pub fn build(b: *std.build.Builder) void {
     exe.linkLibC();
     exe.install();
 
-    const vcpkg_root = "./vcpkg_installed/x64-windows";
-    exe.addIncludePath(vcpkg_root ++ "/include/SDL2");
-    exe.addLibraryPath(vcpkg_root ++ "/lib");
-    var source_path = vcpkg_root ++ "/bin";
-    var dest_path = "./bin";
-    installFiles(b, source_path, dest_path, &.{
-        "ogg.dll",
-        "SDL2_mixer.dll",
-        "SDL2_ttf.dll",
-        "SDL2.dll",
-        "vorbis.dll",
-        "vorbisfile.dll",
-    });
+    exe.addVcpkgPaths(.dynamic) catch @panic("vcpkg not found");
+
+    // NOTE: this is deliberate, to handle windows + git bash, as path concatenation is broken
+    if (exe.target.isWindows()) {
+        const vcpkg_root = "./vcpkg_installed/x64-windows";
+        exe.addIncludePath(vcpkg_root ++ "/include");
+        exe.addLibraryPath(vcpkg_root ++ "/lib");
+        var source_path = vcpkg_root ++ "/bin";
+        var dest_path = "./bin";
+        installFiles(b, source_path, dest_path, &.{
+            "ogg.dll",
+            "SDL2_mixer.dll",
+            "SDL2_ttf.dll",
+            "SDL2.dll",
+            "vorbis.dll",
+            "vorbisfile.dll",
+        });
+    }
+
     exe.linkSystemLibrary("sdl2");
     exe.linkSystemLibrary("sdl2_mixer");
     exe.linkSystemLibrary("sdl2_ttf");
