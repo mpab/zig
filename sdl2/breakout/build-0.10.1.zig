@@ -1,20 +1,6 @@
 const std = @import("std");
-const dbg = std.log.debug;
 
 // zig version 0.10.1 build file
-
-const allocator = std.heap.page_allocator;
-
-fn concat(one: []const u8, two: []const u8) ![]u8 {
-    var str = try std.fmt.allocPrint(allocator, "{s}{s}", .{ one, two });
-    return str;
-}
-
-fn free(str: []u8) void {
-    allocator.free(str);
-}
-
-const fs = std.fs;
 
 pub fn build(b: *std.build.Builder) void {
     // Standard target options allows the person running `zig build` to choose
