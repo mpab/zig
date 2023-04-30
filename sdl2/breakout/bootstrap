@@ -11,7 +11,8 @@ if [ ! -e "$ZIGSDL" ]; then
   git clone https://github.com/MasterQ32/SDL.zig.git
   cd ..
 
-export SUBST_STR='s|pub const c = @import("sdl-native");|// zig-game hack...\n// pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL2/SDL.h");\n    @cInclude("SDL2/SDL_ttf.h");\n});|g'
+  export SUBST_STR='s|pub const c = @import("sdl-native");|// zig-game hack...\n// pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL2/SDL.h");\n    @cInclude("SDL2/SDL_ttf.h");\n});|g'
+  
   if [ "$OSTYPE" == "darwin"* ]; then
     sed -i '' -e "$SUBST_STR" $ZIGPATCHFILEPATH
   else
