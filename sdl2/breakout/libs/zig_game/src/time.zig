@@ -3,7 +3,9 @@ const c = @cImport({
 });
 
 pub fn get_ticks() u64 {
-    return c.SDL_GetTicks64();
+    // TODO: kludge for rpi/SDL install
+    //return c.SDL_GetTicks64();
+    return c.SDL_GetTicks();
 }
 
 pub fn delay(ms: u32) void {

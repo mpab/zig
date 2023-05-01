@@ -1,4 +1,5 @@
 const std = @import("std");
+const info = std.log.info;
 
 // zig version 0.10.1 build file
 
@@ -47,13 +48,26 @@ pub fn build(b: *std.build.Builder) void {
         exe.addLibraryPath(vcpkg_root ++ "/lib");
     }
 
+    if (exe.target.isLinux()) {
+        try_vckpg = false;
+        exe.addIncludePath("/usr/include");
+        exe.addLibraryPath("/usr/lib");
+
+        exe.linkSystemLibrary("freetype");
+        exe.linkSystemLibrary("ogg");
+        exe.linkSystemLibrary("png");
+        exe.linkSystemLibrary("vorbis");
+        exe.linkSystemLibrary("vorbisenc");
+        exe.linkSystemLibrary("vorbisfile");
+    }
+
     if (try_vckpg) {
         exe.addVcpkgPaths(.static) catch @panic("vcpkg not found");
     }
 
-    exe.linkSystemLibrary("sdl2");
-    exe.linkSystemLibrary("sdl2_mixer");
-    exe.linkSystemLibrary("sdl2_ttf");
+    exe.linkSystemLibrary("SDL2");
+    exe.linkSystemLibrary("SDL2_mixer");
+    exe.linkSystemLibrary("SDL2_ttf");
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());
