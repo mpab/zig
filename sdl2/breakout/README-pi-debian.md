@@ -3,14 +3,17 @@
 "You just need to build vcpkg from source, and install zig from snap"
 - not really, vcpkg SDL mixer isn't built with the correct flags, so audio doesn't work
 
-NOTE: sprite transparency is broken on this platform
 
-SDL dependencies
+
+SDL dependencies - tested on bullseye normal/full (not lite)
 
 ```sh
 sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
 sudo apt-get install libogg-dev libvorbis-dev
 ```
+...then build/run as normal
+
+NOTE: sprite transparency is broken on this platform - possibly due to the SDL version
 
 ---
 
