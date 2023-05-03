@@ -55,4 +55,4 @@ sudo mv /usr/bin/cmake /usr/bin/cmake_old # still on path...
 
 Not working (issues with header files)
 
-[build script: build-install-SDL2](./build-install-SDL2)
+[build-install-SDL2](./build-install-SDL2)
