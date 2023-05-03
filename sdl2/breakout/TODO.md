@@ -70,3 +70,7 @@
 - supports zig v0.10.1 and v0.11.0 build/code
 - fixed drift issue with ticker
 - fixed bat debounce
+- works on:
+  - windows 11 (x86_64)
+  - OS X (aarch64)
+  - debian/aarch64 (raspberry pi)

@@ -13,8 +13,8 @@ sudo apt-get install libogg-dev libvorbis-dev
 ```
 ...then build/run as normal
 
-NOTE: sprite transparency is broken on this platform - possibly due to the SDL version
-
+~~NOTE: sprite transparency is broken on this platform - possibly due to the SDL version~~
+FIXED: use default PixelFormatEnum with alpha channel
 ---
 
 ## vcpkg notes (not working...)

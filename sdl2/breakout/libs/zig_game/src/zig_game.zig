@@ -60,14 +60,16 @@ pub const ZigGame = struct {
         var size = renderer.getOutputSize() catch |err| return err;
 
         var format = sdl.PixelFormatEnum.argb8888;
-        if (window.getSurface()) |surface| {
-            var texture = sdl.createTextureFromSurface(renderer, surface) catch |err| return err;
-            defer texture.destroy();
-            var info = texture.query() catch |err| return err;
-            format = info.format;
-        } else |_| {
-            dbg("WARN: could not get window surface, using default format: {}", .{format});
-        }
+        // fixes issues (e.g. on rpi) where the desktop window
+        // does not support alpha - resulting in transparency not working
+        // if (window.getSurface()) |surface| {
+        //     var texture = sdl.createTextureFromSurface(renderer, surface) catch |err| return err;
+        //     defer texture.destroy();
+        //     var info = texture.query() catch |err| return err;
+        //     format = info.format;
+        // } else |_| {
+        //     dbg("WARN: could not get window surface, using default format: {}", .{format});
+        // }
 
         return ZigGame{ .window = window, .renderer = renderer, .size = size, .format = format };
     }
