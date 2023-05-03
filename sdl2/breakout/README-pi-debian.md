@@ -5,27 +5,14 @@
 
 NOTE: sprite transparency is broken on this platform
 
-
-SDL dependencies (needs to be verified again)
-
-```sh
-sudo apt install libx11-dev libxft-dev libxext-dev
-sudo apt install libwayland-dev libxkbcommon-dev libegl1-mesa-dev
-sudo apt install libibus-1.0-dev
-sudo apt-get install libasound2-dev libpulse-dev libaudio-dev libsndio-dev libsamplerate0-dev
-sudo apt-get install libvorbis-dev
-
-sudo apt-get install libsdl2-dev
-sudo apt --fix-broken install
-sudo apt-get install libsdl2-mixer-dev
-sudo apt-get install libsdl2-ttf-dev
-```
-
-should now work
+SDL dependencies
 
 ```sh
-zig build run
+sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
+sudo apt-get install libogg-dev libvorbis-dev
 ```
+
+---
 
 ## vcpkg notes (not working...)
 
@@ -63,3 +50,9 @@ sudo mv /usr/bin/cmake /usr/bin/cmake_old # still on path...
 ```
 
 ...then rebuild vcpkg
+
+## install and build from source
+
+Not working (issues with header files)
+
+[build script: build-install-SDL2](./build-install-SDL2)

@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+
+sudo apt-get update -y
+sudo apt-get install -y automake libfreetype-dev libfreetype6 libfreetype6-dev libharfbuzz-dev
+
+mkdir -p $DEV_ROOT/3rdparty/SDL2
+cd $DEV_ROOT/3rdparty/SDL2
+
+if [ ! -d SDL ]; then
+    git clone https://github.com/libsdl-org/SDL.git -b SDL2
+    cd SDL
+    ./autogen.sh
+    mkdir -p build
+    cd build
+    ../configure --disable-video-opengl --disable-video-x11 --disable-pulseaudio --disable-esd --enable-video-opengles --enable-libudev --enable-arm-simd --enable-video-vulkan --host=arm-raspberry-linux-gnueabihf
+    make
+    sudo make install
+fi
+
+cd $DEV_ROOT/3rdparty/SDL2
+if [ ! -d SDL_mixer ]; then
+    git clone https://github.com/libsdl-org/SDL_mixer.git -b SDL2
+    cd SDL_mixer
+    ./autogen.sh
+    mkdir -p build
+    cd build
+    ../configure
+    make
+    sudo make install
+fi
+
+# still not working...
+# cd $DEV_ROOT/3rdparty/SDL2
+# if [ ! -d SDL_ttf ]; then
+#     git clone https://github.com/libsdl-org/SDL_ttf.git -b SDL2
+#     cd SDL_ttf
+#     ./autogen.sh
+#     mkdir -p build
+#     cd build
+#     export CPPFLAGS='-I/usr/include/freetype2 -I/usr/include/harfbuzz'
+#     ../configure
+#     make
+#     sudo make install
+# fi
