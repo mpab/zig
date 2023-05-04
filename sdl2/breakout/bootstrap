@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+# suppress 'command not found' errors
+type sudo >/dev/null 2>&1 || sudo() { :; }
+type vcpkg >/dev/null 2>&1 || vcpkg() { :; }
+
 export ZIGSDL='./deps/SDL.zig'
 export ZIGPATCHFILEPATH="$ZIGSDL/src/wrapper/sdl.zig"
 
@@ -28,10 +32,10 @@ if [ "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
   vcpkg install
 elif [ "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
   echo installing dependencies for distro: $DISTRO_NAME
-  : apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
-  : sudo apt-get install -y libogg-dev libvorbis-dev
+  sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
+  sudo apt-get install -y libogg-dev libvorbis-dev
   # WSL2/Debian dependencies
-  : sudo apt-get install -y automake libfreetype-dev libfreetype6 libfreetype6-dev libharfbuzz-dev
+  sudo apt-get install -y automake libfreetype-dev libfreetype6 libfreetype6-dev libharfbuzz-dev
 else
   echo unhandled distro: $DISTRO_NAME
 fi
