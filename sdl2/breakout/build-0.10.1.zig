@@ -41,6 +41,7 @@ pub fn build(b: *std.build.Builder) void {
     }
 
     // ...and also here - brew installation of vckpg not detected
+    // but bootstrap uses vckpg to pull down the files
     if (exe.target.isDarwin()) {
         try_vckpg = false;
         const vcpkg_root = "./vcpkg_installed/x64-osx";

@@ -30,6 +30,9 @@ DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/n
 if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
   echo installing dependencies for msys
   vcpkg install
+elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
+  echo installing dependencies for OSX/x86_64
+  vcpkg install
 elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
   echo installing dependencies for debian
   sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
