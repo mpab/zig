@@ -1,18 +1,17 @@
 #!/usr/bin/env sh
 
-vcpkg install
-
 export ZIGSDL='./deps/SDL.zig'
 export ZIGPATCHFILEPATH="$ZIGSDL/src/wrapper/sdl.zig"
 
 if [ ! -e "$ZIGSDL" ]; then
+  echo installing/patching SDL wrapper
   mkdir -p ./deps
   cd ./deps
   git clone https://github.com/MasterQ32/SDL.zig.git
   cd ..
 
   export SUBST_STR='s|pub const c = @import("sdl-native");|// zig-game hack...\n// pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL2/SDL.h");\n    @cInclude("SDL2/SDL_ttf.h");\n});|g'
-  
+
   if [ "$OSTYPE" = "darwin"* ]; then
     sed -i '' -e "$SUBST_STR" $ZIGPATCHFILEPATH
   else
@@ -20,5 +19,19 @@ if [ ! -e "$ZIGSDL" ]; then
   fi
   echo patched $ZIGPATCHFILEPATH
 else
-  echo "$ZIGSDL exists, not patching $ZIGPATCHFILEPATH" 
+  echo "$ZIGSDL exists, not patching $ZIGPATCHFILEPATH"
+fi
+
+DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/null" | head -n1 | sed -e 's/PRETTY_NAME=//' -e 's/"//g' -e 's/ /-/g' -e 's/\//-/g')
+if [ "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
+  echo installing dependencies for distro: $DISTRO_NAME
+  vcpkg install
+elif [ "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
+  echo installing dependencies for distro: $DISTRO_NAME
+  : apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
+  : sudo apt-get install -y libogg-dev libvorbis-dev
+  # WSL2/Debian dependencies
+  : sudo apt-get install -y automake libfreetype-dev libfreetype6 libfreetype6-dev libharfbuzz-dev
+else
+  echo unhandled distro: $DISTRO_NAME
 fi

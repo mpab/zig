@@ -17,8 +17,12 @@ clone this repo, open a shell prompt (git bash on windows)
 
 **Zig Compatibility:** v0.10.1, v0.11.0, default is currently v0.10.1
 
-**Note:** built and tested on OSX/x86_64, Windows/x86_64
+**Note:** built and tested on
+- OSX/x86_64
+- Windows/x86_64
+- Debian/aarch64 (Raspberry Pi)
+- Debian/x86_64 (WSL2)
 
 [progress tracker](./TODO.md)
 
-[raspberry pi installation](./README-pi-debian.md)
+[linux installation notes (including raspberry pi)](./README-lunix.md)
