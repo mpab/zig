@@ -1,6 +1,7 @@
 # Installing on Lunix variants
 
 SDL dependencies: tested on
+
 - Raspberry Pi/Debian bullseye normal/full (not lite)
 - WSL2/Debian
 
@@ -19,9 +20,10 @@ FIXED: use default PixelFormatEnum with alpha channel
 
 ---
 
-# Raspberry Pi/Debian/aarch64
+## Raspberry Pi/Debian/aarch64
 
 "You just need to build vcpkg from source, and install zig from snap"
+
 - not really, vcpkg SDL mixer isn't built with the correct flags, so audio doesn't work
 
 ---
