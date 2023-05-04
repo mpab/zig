@@ -27,11 +27,11 @@ else
 fi
 
 DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/null" | head -n1 | sed -e 's/PRETTY_NAME=//' -e 's/"//g' -e 's/ /-/g' -e 's/\//-/g')
-if [ "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
-  echo installing dependencies for distro: $DISTRO_NAME
+if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
+  echo installing dependencies for msys
   vcpkg install
-elif [ "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
-  echo installing dependencies for distro: $DISTRO_NAME
+elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
+  echo installing dependencies for debian
   sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
   sudo apt-get install -y libogg-dev libvorbis-dev
   # WSL2/Debian dependencies
