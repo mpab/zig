@@ -2,10 +2,13 @@
 
 # suppress 'command not found' errors
 type sudo >/dev/null 2>&1 || sudo() { :; }
+type vcpkg >/dev/null 2>&1 || USE_LOCAL_VCPKG=1
 type vcpkg >/dev/null 2>&1 || vcpkg() { :; }
 
 export ZIGSDL='./deps/SDL.zig'
 export ZIGPATCHFILEPATH="$ZIGSDL/src/wrapper/sdl.zig"
+
+DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/null" | head -n1 | sed -e 's/PRETTY_NAME=//' -e 's/"//g' -e 's/ /-/g' -e 's/\//-/g')
 
 if [ ! -e "$ZIGSDL" ]; then
   echo installing/patching SDL wrapper
@@ -16,7 +19,7 @@ if [ ! -e "$ZIGSDL" ]; then
 
   export SUBST_STR='s|pub const c = @import("sdl-native");|// zig-game hack...\n// pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL2/SDL.h");\n    @cInclude("SDL2/SDL_ttf.h");\n});|g'
 
-  if [ "$OSTYPE" = "darwin"* ]; then
+  if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin}" ]; then
     sed -i '' -e "$SUBST_STR" $ZIGPATCHFILEPATH
   else
     sed -i -e "$SUBST_STR" $ZIGPATCHFILEPATH
@@ -26,15 +29,20 @@ else
   echo "$ZIGSDL exists, not patching $ZIGPATCHFILEPATH"
 fi
 
-DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/null" | head -n1 | sed -e 's/PRETTY_NAME=//' -e 's/"//g' -e 's/ /-/g' -e 's/\//-/g')
 if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
   echo installing dependencies for msys
-  if [ ! -d vcpkg ]; then
-    git clone https://github.com/microsoft/vcpkg
-    ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+  if [ -z "$USE_LOCAL_VCPKG" ]; then
+    echo "using system vcpkg"
+    vcpkg install
+  else
+    echo "using local vcpkg"
+    if [ ! -d vcpkg ]; then
+      git clone https://github.com/microsoft/vcpkg
+      ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+    fi
+    export VCPKG_DEFAULT_TRIPLET="x64-windows"
+    cd vcpkg && ./vcpkg install
   fi
-  export VCPKG_DEFAULT_TRIPLET="x64-windows"
-  cd vcpkg && ./vcpkg install
 elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
   echo installing dependencies for OSX/x86_64
   if [ ! -d vcpkg ]; then
