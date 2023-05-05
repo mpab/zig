@@ -33,6 +33,7 @@ if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
     git clone https://github.com/microsoft/vcpkg
     ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
   fi
+  export VCPKG_DEFAULT_TRIPLET="x64-windows"
   cd vcpkg && ./vcpkg install
 elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
   echo installing dependencies for OSX/x86_64
