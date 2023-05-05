@@ -23,6 +23,7 @@ zig-out/
 # local 3rd-party libs
 3rdparty/
 vcpkg_installed/
+vcpkg/
 
  # source libs
 deps/
