@@ -37,6 +37,8 @@ fi
 
 [ "$DISTRO_NAME" != "${DISTRO_NAME#x86_64-Msys}" ] && export VCPKG_DEFAULT_TRIPLET=x64-windows
 [ "$DISTRO_NAME" != "${DISTRO_NAME#Darwin-x86_64}" ] && export VCPKG_DEFAULT_TRIPLET=x64-osx
+# TODO: use less-brittle DISTRO_NAME, this is a hack which assumes x84 architecture
+[ "$DISTRO_NAME" != "${DISTRO_NAME#Debian-GNU-Linux}" ] && export VCPKG_DEFAULT_TRIPLET=x64-linux
 
 if [ -z "$VCPKG_DEFAULT_TRIPLET" ]; then
   if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
