@@ -40,8 +40,8 @@ pub fn build(b: *std.build.Builder) void {
         });
     }
 
-    // ...and also here - brew installation of vckpg not detected
-    // but bootstrap uses vckpg to pull down the files
+    // ...and also here - installation of vckpg not detected
+    // bootstrap uses vckpg to pull down the files
     if (exe.target.isDarwin()) {
         try_vckpg = false;
         const vcpkg_root = "./vcpkg_installed/x64-osx";
@@ -49,17 +49,37 @@ pub fn build(b: *std.build.Builder) void {
         exe.addLibraryPath(vcpkg_root ++ "/lib");
     }
 
+    // if (exe.target.isLinux()) {
+    //     try_vckpg = false;
+    //     exe.addIncludePath("/usr/include");
+    //     exe.addLibraryPath("/usr/lib");
+
+    //     exe.linkSystemLibrary("freetype");
+    //     exe.linkSystemLibrary("ogg");
+    //     exe.linkSystemLibrary("png");
+    //     exe.linkSystemLibrary("vorbis");
+    //     exe.linkSystemLibrary("vorbisenc");
+    //     exe.linkSystemLibrary("vorbisfile");
+    // }
+
+    // ...and also here - installation of vckpg not detected
+    // bootstrap uses vckpg to pull down the files
     if (exe.target.isLinux()) {
         try_vckpg = false;
-        exe.addIncludePath("/usr/include");
-        exe.addLibraryPath("/usr/lib");
-
+        const vcpkg_root = "./vcpkg_installed/x64-linux";
+        exe.addIncludePath(vcpkg_root ++ "/include");
+        exe.addLibraryPath(vcpkg_root ++ "/lib");
+        exe.linkSystemLibrary("brotlicommon-static");
+        exe.linkSystemLibrary("brotlidec-static");
+        exe.linkSystemLibrary("brotlienc-static");
+        exe.linkSystemLibrary("bz2");
         exe.linkSystemLibrary("freetype");
         exe.linkSystemLibrary("ogg");
         exe.linkSystemLibrary("png");
         exe.linkSystemLibrary("vorbis");
         exe.linkSystemLibrary("vorbisenc");
         exe.linkSystemLibrary("vorbisfile");
+        exe.linkSystemLibrary("z");
     }
 
     if (try_vckpg) {
